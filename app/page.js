@@ -1,5 +1,6 @@
 import Scale from "./components/Scale";
 import Upload from "./components/Upload";
+import Result from "./components/Result";
 
 export default function Home() {
   return (
@@ -9,6 +10,7 @@ export default function Home() {
       <div className="flex flex-row items-start gap-4 border-2 border-black rounded-md p-5 w-full h-full">
         <Scale />
         <Upload />
+        <Result />
       </div>
       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
        Updated July 7, 2025

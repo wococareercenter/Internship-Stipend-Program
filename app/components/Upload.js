@@ -9,7 +9,7 @@ export default function Upload() {
     const [isDragOver, setIsDragOver] = useState(false);
     const [uploadedFile, setUploadedFile] = useState(null);
     const [csvData, setCsvData] = useState("");
-    const [showTable, setShowTable] = useState(false);
+    const [showModal, setShowModal] = useState(false);
     const [error, setError] = useState("");
     const [isMounted, setIsMounted] = useState(false);
     const fileInputRef = useRef(null);
@@ -61,14 +61,14 @@ export default function Upload() {
             setFile(selectedFile);
             setUploadedFile(null);
             setCsvData("");
-            setShowTable(false);
+            setShowModal(false);
             
-            // If it's a CSV file, read and display it
+            // If it's a CSV file, read and show modal
             if (selectedFile.type === 'text/csv' || selectedFile.name.toLowerCase().endsWith('.csv')) {
                 try {
                     const csvContent = await readCsvFile(selectedFile);
                     setCsvData(csvContent);
-                    setShowTable(true);
+                    setShowModal(true);
                 } catch (err) {
                     setError("Failed to read CSV file");
                 }
@@ -131,6 +131,19 @@ export default function Upload() {
             if (fileInputRef.current) {
                 fileInputRef.current.value = "";
             }
+            
+            // Close modal and clear data
+            setShowModal(false);
+            setCsvData("");
+            
+            // Dispatch custom event to notify other components
+            window.dispatchEvent(new CustomEvent('fileUploaded', {
+                detail: {
+                    fileName: file.name,
+                    fileSize: file.size,
+                    fileType: file.type
+                }
+            }));
         } catch (err) {
             setError("Upload failed. Please try again.");
         } finally {
@@ -278,16 +291,92 @@ export default function Upload() {
                 </div>
             )}
 
-            {/* CSV Table Preview */}
-            {showTable && csvData && (
-                <div className="border border-gray-200 rounded-md p-4">
-                    <h3 className="text-lg font-semibold mb-4">CSV Preview</h3>
-                    <div className="overflow-x-auto p-4">
-                        <CsvToHtmlTable 
-                            data={csvData}
-                            csvDelimiter="," 
-                            tableClassName="min-w-full border-collapse border border-gray-300 p-10" 
-                        />
+            {/* Upload Confirmation Modal */}
+            {showModal && file && (
+                <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                            <div>
+                                <h3 className="text-xl font-semibold text-gray-900">Upload Confirmation</h3>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Review your file before uploading
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setShowModal(false);
+                                    setCsvData("");
+                                }}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                            {/* CSV Preview */}
+                            {csvData && (
+                                <div className="p-1">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="flex-1">
+                                            <p className="font-medium text-gray-900">{file.name}</p>
+                                            <p className="text-sm text-gray-500">{formatFileSize(file.size)}</p>
+                                            <p className="text-xs text-gray-400">Type: {file.type}</p>
+                                        </div>
+                                    </div>
+                                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                                        <div className="overflow-x-auto max-h-64">
+                                            <CsvToHtmlTable 
+                                                data={csvData}
+                                                csvDelimiter="," 
+                                                tableClassName="min-w-full border-collapse border border-gray-300" 
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Upload Progress */}
+                            {isUploading && (
+                                <div className="mb-6">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <LoadingDots />
+                                        <span className="text-sm text-gray-600">Uploading file...</span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                        <div 
+                                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                            style={{ width: `${uploadProgress}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+                            <button
+                                onClick={() => {
+                                    setShowModal(false);
+                                    setCsvData("");
+                                }}
+                                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                                disabled={isUploading}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleUpload}
+                                disabled={isUploading}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                {isUploading ? 'Uploading...' : 'Confirm Upload'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

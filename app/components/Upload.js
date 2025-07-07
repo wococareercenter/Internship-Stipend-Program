@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
+import { CsvToHtmlTable } from "react-csv-to-table";
 
 export default function Upload() {
     const [file, setFile] = useState(null);
@@ -7,6 +8,8 @@ export default function Upload() {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [isDragOver, setIsDragOver] = useState(false);
     const [uploadedFile, setUploadedFile] = useState(null);
+    const [csvData, setCsvData] = useState("");
+    const [showTable, setShowTable] = useState(false);
     const [error, setError] = useState("");
     const [isMounted, setIsMounted] = useState(false);
     const fileInputRef = useRef(null);
@@ -44,10 +47,32 @@ export default function Upload() {
         return true;
     };
 
-    const handleFileSelect = (selectedFile) => {
+    const readCsvFile = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = (e) => reject(e);
+            reader.readAsText(file);
+        });
+    };
+
+    const handleFileSelect = async (selectedFile) => {
         if (validateFile(selectedFile)) {
             setFile(selectedFile);
             setUploadedFile(null);
+            setCsvData("");
+            setShowTable(false);
+            
+            // If it's a CSV file, read and display it
+            if (selectedFile.type === 'text/csv' || selectedFile.name.toLowerCase().endsWith('.csv')) {
+                try {
+                    const csvContent = await readCsvFile(selectedFile);
+                    setCsvData(csvContent);
+                    setShowTable(true);
+                } catch (err) {
+                    setError("Failed to read CSV file");
+                }
+            }
         }
     };
 
@@ -147,7 +172,7 @@ export default function Upload() {
             
             {/* Drag & Drop Area */}
             <div 
-                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                className={`border-2 rounded-lg p-8 text-center transition-colors ${
                     isDragOver 
                         ? 'border-blue-500 bg-blue-50' 
                         : 'border-gray-300 hover:border-gray-400'
@@ -240,7 +265,7 @@ export default function Upload() {
             {/* Uploaded File Preview */}
             {uploadedFile && (
                 <div className="border border-green-200 rounded-md p-4 bg-green-50">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 mb-4">
                         <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
@@ -249,6 +274,20 @@ export default function Upload() {
                             <p className="text-sm text-green-600">{uploadedFile.name}</p>
                             <p className="text-xs text-green-500">{formatFileSize(uploadedFile.size)}</p>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* CSV Table Preview */}
+            {showTable && csvData && (
+                <div className="border border-gray-200 rounded-md p-4">
+                    <h3 className="text-lg font-semibold mb-4">CSV Preview</h3>
+                    <div className="overflow-x-auto p-4">
+                        <CsvToHtmlTable 
+                            data={csvData}
+                            csvDelimiter="," 
+                            tableClassName="min-w-full border-collapse border border-gray-300 p-10" 
+                        />
                     </div>
                 </div>
             )}

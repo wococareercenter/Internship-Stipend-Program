@@ -366,7 +366,7 @@ export default function Scale() {
                         </div>  
                     )}
                     
-                    <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="submit">Save</button>
+                    <button className=" bg-green-600 text-white hover:bg-green-700 rounded-md p-2" type="submit">Save</button>
                 </form>
             </div>
             )}

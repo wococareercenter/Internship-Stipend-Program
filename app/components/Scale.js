@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Scale() {
     const [showScale, setShowScale] = useState(false);
@@ -7,9 +7,24 @@ export default function Scale() {
     const [showPaid, setShowPaid] = useState(false);
     const [showLocation, setShowLocation] = useState(false);
     const [showCostOfLiving, setShowCostOfLiving] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    if (!isMounted) {
+        return (
+            <div className="flex flex-col gap-4 border-2 border-black rounded-md p-5 min-w-fit"> 
+                <div className="flex items-center justify-center h-32">
+                    <div className="text-gray-500">Loading...</div>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="flex flex-col gap-4 border-2 border-black rounded-md p-5"> 
+        <div className="flex flex-col gap-4 border-2 border-black rounded-md p-5 min-w-fit"> 
             <button className="hover:text-zinc-500" type="button" onClick={() => setShowScale(!showScale)}>
                 <h2 className="text-2xl font-bold">Set Your Scale</h2>
             </button>

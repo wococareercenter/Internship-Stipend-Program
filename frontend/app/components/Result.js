@@ -18,9 +18,7 @@ export default function Result() {
         // Listen for file upload events
         const handleFileUploaded = (event) => {
             fetchUploadedFiles();
-            // Show success message
-            setSuccessMessage(`File "${event.detail?.fileName || 'uploaded'}" added successfully!`);
-            setTimeout(() => setSuccessMessage(""), 3000); // Clear after 3 seconds
+            
         };
         
         window.addEventListener('fileUploaded', handleFileUploaded);

@@ -58,4 +58,57 @@ export async function GET(request, { params }) {
             details: error.message 
         }, { status: 500 });
     }
+}
+
+export async function DELETE(request, { params }) {
+    try {
+        const { filename } = params;
+        
+        if (!filename) {
+            return NextResponse.json({ 
+                error: "Filename is required" 
+            }, { status: 400 });
+        }
+
+        const uploadsDir = path.join(process.cwd(), "public", "uploads");
+        const filePath = path.join(uploadsDir, filename);
+
+        // Security check: ensure the file is within the uploads directory
+        const resolvedPath = path.resolve(filePath);
+        const resolvedUploadsDir = path.resolve(uploadsDir);
+        
+        if (!resolvedPath.startsWith(resolvedUploadsDir)) {
+            return NextResponse.json({ 
+                error: "Access denied" 
+            }, { status: 403 });
+        }
+
+        // Check if file exists
+        if (!fs.existsSync(filePath)) {
+            return NextResponse.json({ 
+                error: "File not found" 
+            }, { status: 404 });
+        }
+
+        // Delete the file
+        try {
+            fs.unlinkSync(filePath);
+            return NextResponse.json({ 
+                message: "File deleted successfully" 
+            });
+        } catch (deleteError) {
+            console.error('Error deleting file:', deleteError);
+            return NextResponse.json({ 
+                error: "Failed to delete file",
+                details: deleteError.message 
+            }, { status: 500 });
+        }
+
+    } catch (error) {
+        console.error('Error in DELETE request:', error);
+        return NextResponse.json({ 
+            error: "Failed to process delete request",
+            details: error.message 
+        }, { status: 500 });
+    }
 } 

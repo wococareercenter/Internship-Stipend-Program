@@ -25,25 +25,15 @@ app.add_middleware(
 async def root():
     return {"message": "ISP Platform is running!"}
 
+### SCALE ENDPOINT ###
+# Data model for SCALE endpoint
+class Scale(BaseModel):
+    scale: dict
 
-### FAFSA ENDPOINT ###
-# Data model for FAFSA endpoint
-class FAFSAScale(BaseModel):
-    vhn: int
-    hn: int
-
-@app.post("/api/FAFSA")
-async def fafsa_post(data: FAFSAScale):
-    print(f"POST received: vhn={data.vhn}, hn={data.hn}")
-    return {"result": {"vhn": data.vhn, "hn": data.hn}}   
-
-
-### PAID / UNPAID ENDPOINT ###
-
-### IN PERSON / HYBRID / VIRTUAL ENDPOINT ###
-
-### COST OF LIVING ENDPOINT ###
-
+@app.post("/api/scale")
+async def scale_post(data: Scale):
+    print(f"POST received: {data.scale}")
+    return {"result": data.scale}
 
 ### FILE UPLOAD ENDPOINT ###
 @app.post("/api/upload")

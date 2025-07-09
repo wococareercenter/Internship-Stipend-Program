@@ -135,6 +135,7 @@ export default function Upload() {
             // Close modal and clear data
             setShowModal(false);
             setCsvData("");
+
             
             // Dispatch custom event to notify other components
             window.dispatchEvent(new CustomEvent('fileUploaded', {
@@ -151,6 +152,15 @@ export default function Upload() {
             setUploadProgress(0);
         }
     };
+
+    useEffect(() => {
+        if (uploadedFile) {
+            const timer = setTimeout(() => {
+                setUploadedFile(null);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [uploadedFile]);
 
     const formatFileSize = (bytes) => {
         if (bytes === 0) return '0 Bytes';

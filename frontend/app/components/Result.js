@@ -9,6 +9,7 @@ export default function Result() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
+    const [deletingFiles, setDeletingFiles] = useState(new Set());
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
@@ -18,9 +19,7 @@ export default function Result() {
         // Listen for file upload events
         const handleFileUploaded = (event) => {
             fetchUploadedFiles();
-            // Show success message
-            setSuccessMessage(`File "${event.detail?.fileName || 'uploaded'}" added successfully!`);
-            setTimeout(() => setSuccessMessage(""), 3000); // Clear after 3 seconds
+            
         };
         
         window.addEventListener('fileUploaded', handleFileUploaded);
@@ -83,6 +82,44 @@ export default function Result() {
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString();
     };
+
+    const handleDeleteFile = async (fileName) => {
+        // Show confirmation dialog
+        if (!confirm(`Are you sure you want to delete "${fileName}"?`)) {
+            return;
+        }
+        
+        setDeletingFiles(prev => new Set(prev).add(fileName));
+        setError("");
+        
+        try {
+            const response = await fetch(`/api/files/${encodeURIComponent(fileName)}`, {
+                method: 'DELETE',
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to delete file');
+            }
+            
+            // Refresh the file list
+            fetchUploadedFiles();
+            
+            // Show success message
+            setSuccessMessage(`File "${fileName}" deleted successfully!`);
+            setTimeout(() => setSuccessMessage(""), 3000);
+            
+        } catch (err) {
+            setError('Failed to delete file. Please try again.');
+        } finally {
+            setDeletingFiles(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(fileName);
+                return newSet;
+            });
+        }
+    };
+
+    
 
     if (!isMounted) {
         return (
@@ -161,6 +198,25 @@ export default function Result() {
                                         CSV
                                     </span>
                                 )}
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteFile(file.name);
+                                    }}
+                                    disabled={deletingFiles.has(file.name)}
+                                    className={`text-red-500 hover:text-red-700 p-1 transition-colors ${
+                                        deletingFiles.has(file.name) ? 'opacity-50 cursor-not-allowed' : ''
+                                    }`}
+                                    title="Delete file"
+                                >
+                                    {deletingFiles.has(file.name) ? (
+                                        <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    )}
+                                </button>
                                 <svg 
                                     className={`w-4 h-4 text-gray-500 transition-transform ${
                                         selectedFile === file.name ? 'rotate-180' : ''

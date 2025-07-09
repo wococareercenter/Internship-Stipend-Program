@@ -2,12 +2,19 @@
 import { useState, useEffect } from "react";
 
 export default function Scale() {
+    // Dropdown Variables
     const [showScale, setShowScale] = useState(false);
     const [showFAFSA, setShowFAFSA] = useState(false);
     const [showPaid, setShowPaid] = useState(false);
     const [showLocation, setShowLocation] = useState(false);
     const [showCostOfLiving, setShowCostOfLiving] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
+
+    // Input Variables
+    const [vhn, setVHN] = useState(0);
+    const [hn, setHN] = useState(0);
+    
+    
 
     useEffect(() => {
         setIsMounted(true);
@@ -21,6 +28,33 @@ export default function Scale() {
                 </div>
             </div>
         );
+    }
+
+    // Submit Function
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        console.log({vhn: vhn, hn: hn});
+        
+        try {
+            const response = await fetch("http://localhost:8000/api/FAFSA", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({vhn: parseInt(vhn), hn: parseInt(hn)}),
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                console.log("API Response:", result.result);
+            } else {
+                console.error("API Error:", response.status);
+                alert("Error connecting to API");
+            }
+        } catch (error) {
+            console.error("Fetch Error:", error);
+            alert("Error connecting to API");
+        }
     }
 
     return (
@@ -39,12 +73,18 @@ export default function Scale() {
                         <div className="flex flex-col justify-center gap-4 border-2 border-black rounded-md p-2 mx-auto">
                             <div className="flex flex-row gap-4 justify-between items-center">
                                 <label htmlFor="Very High Need (VHN"> Very High Need (VHN)</label>
-                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5" />
+                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5" 
+                                    value={vhn} 
+                                    onChange={(e) => setVHN(e.target.value)} 
+                                />
                             </div>
                             <hr className="border-2 border-black w-full h-px" />
                             <div className="flex flex-row gap-4 justify-between items-center">
                                 <label htmlFor="FAFSA">High Need (HN)</label>
-                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
+                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" 
+                                    value={hn} 
+                                    onChange={(e) => setHN(e.target.value)} 
+                                />
                             </div>
                             <hr className="border-2 border-black w-full" />
                             <div className="flex flex-row gap-4 justify-between items-center">
@@ -366,7 +406,7 @@ export default function Scale() {
                         </div>  
                     )}
                     
-                    <button className=" bg-green-600 text-white hover:bg-green-700 rounded-md p-2" type="submit">Save</button>
+                    <button className=" bg-green-600 text-white hover:bg-green-700 rounded-md p-2" type="submit" onClick={handleSubmit}>Save</button>
                 </form>
             </div>
             )}

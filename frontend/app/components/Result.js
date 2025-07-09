@@ -247,7 +247,7 @@ export default function Result() {
                                             Close
                                         </button>
                                     </div>
-                                    <div className="overflow-x-auto max-h-64">
+                                    <div className="overflow-x-auto overflow-y-auto  max-w-105 max-h-64">
                                         <CsvToHtmlTable 
                                             data={csvData}
                                             csvDelimiter="," 

@@ -35,9 +35,11 @@ export default function Result() {
         setError("");
         
         try {
-            const response = await fetch('/api/files');
+            // Connect to FastAPI backend instead of Next.js API
+            const response = await fetch('http://localhost:8000/api/files');
             if (!response.ok) {
-                throw new Error('Failed to fetch files');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || errorData.error || `HTTP ${response.status}: ${response.statusText}`);
             }
             
             const data = await response.json();
@@ -55,13 +57,15 @@ export default function Result() {
         setError("");
         
         try {
-            const response = await fetch(`/api/files/${encodeURIComponent(fileName)}`);
+            // Connect to FastAPI backend instead of Next.js API
+            const response = await fetch(`http://localhost:8000/api/files/${encodeURIComponent(fileName)}`);
             if (!response.ok) {
-                throw new Error('Failed to load file');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || errorData.error || `HTTP ${response.status}: ${response.statusText}`);
             }
             
-            const csvContent = await response.text();
-            setCsvData(csvContent);
+            const data = await response.json();
+            setCsvData(data.content);
             setSelectedFile(fileName);
         } catch (err) {
             setError('Failed to load CSV file');
@@ -84,8 +88,12 @@ export default function Result() {
     };
 
     const handleDeleteFile = async (fileName) => {
-        // Show confirmation dialog
-        if (!confirm(`Are you sure you want to delete "${fileName}"?`)) {
+        // Enhanced confirmation dialog
+        const isConfirmed = window.confirm(
+            `Are you sure you want to delete "${fileName}"?\n\nThis action cannot be undone.`
+        );
+        
+        if (!isConfirmed) {
             return;
         }
         
@@ -93,23 +101,36 @@ export default function Result() {
         setError("");
         
         try {
-            const response = await fetch(`/api/files/${encodeURIComponent(fileName)}`, {
+            // Connect to FastAPI backend instead of Next.js API
+            const response = await fetch(`http://localhost:8000/api/files/${encodeURIComponent(fileName)}`, {
                 method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             });
             
             if (!response.ok) {
-                throw new Error('Failed to delete file');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || errorData.error || `HTTP ${response.status}: ${response.statusText}`);
             }
             
             // Refresh the file list
-            fetchUploadedFiles();
+            await fetchUploadedFiles();
             
             // Show success message
             setSuccessMessage(`File "${fileName}" deleted successfully!`);
             setTimeout(() => setSuccessMessage(""), 3000);
             
+            // Clear selected file if it was the deleted one
+            if (selectedFile === fileName) {
+                setSelectedFile(null);
+                setCsvData("");
+            }
+            
         } catch (err) {
-            setError('Failed to delete file. Please try again.');
+            console.error('Delete error:', err);
+            setError(`Failed to delete file: ${err.message}`);
+            setTimeout(() => setError(""), 5000);
         } finally {
             setDeletingFiles(prev => {
                 const newSet = new Set(prev);
@@ -204,8 +225,8 @@ export default function Result() {
                                         handleDeleteFile(file.name);
                                     }}
                                     disabled={deletingFiles.has(file.name)}
-                                    className={`text-red-500 hover:text-red-700 p-1 transition-colors ${
-                                        deletingFiles.has(file.name) ? 'opacity-50 cursor-not-allowed' : ''
+                                    className={`text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-md transition-all duration-200 ${
+                                        deletingFiles.has(file.name) ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
                                     }`}
                                     title="Delete file"
                                 >

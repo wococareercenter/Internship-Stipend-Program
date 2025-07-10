@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
 import time
+from datetime import datetime
 
 
 app = FastAPI()
@@ -34,6 +35,35 @@ class Scale(BaseModel):
 async def scale_post(data: Scale):
     print(f"POST received: {data.scale}")
     return {"result": data.scale}
+
+### FILE LIST ENDPOINT ###
+@app.get("/api/files")
+async def list_files():
+    """
+    List all uploaded files
+    """
+    try:
+        uploads_dir = "uploads"
+        if not os.path.exists(uploads_dir):
+            return {"files": []}
+        
+        files = []
+        for filename in os.listdir(uploads_dir):
+            file_path = os.path.join(uploads_dir, filename)
+            if os.path.isfile(file_path):
+                stat = os.stat(file_path)
+                files.append({
+                    "name": filename,
+                    "size": stat.st_size,
+                    "uploadDate": datetime.fromtimestamp(stat.st_mtime).isoformat()
+                })
+        
+        # Sort files by upload date (newest first)
+        files.sort(key=lambda x: x["uploadDate"], reverse=True)
+        
+        return {"files": files}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to list files: {str(e)}")
 
 ### FILE UPLOAD ENDPOINT ###
 @app.post("/api/upload")
@@ -85,6 +115,50 @@ async def upload_file(file: UploadFile):
             detail=f"Upload failed: {str(e)}"
         )
 
+### FILE DELETE ENDPOINT ###
+@app.delete("/api/files/{file_name}")
+async def delete_file(file_name: str):
+    """
+    Delete a file
+    """
+    try:
+        file_path = os.path.join("uploads", file_name)
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="File not found")
+        os.remove(file_path)
+        return {"message": "File deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")
+
+### FILE GET ENDPOINT ###
+@app.get("/api/files/{file_name}")
+async def get_file(file_name: str):
+    """
+    Get file content
+    """
+    try:
+        file_path = os.path.join("uploads", file_name)
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        # Check if it's a CSV file
+        file_extension = os.path.splitext(file_name)[1].lower()
+        if file_extension != '.csv':
+            raise HTTPException(
+                status_code=400,
+                detail="Only CSV files are supported for preview"
+            )
+        
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        return {"content": content}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read file: {str(e)}")
 
 
 

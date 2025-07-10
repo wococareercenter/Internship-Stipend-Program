@@ -4,7 +4,8 @@ from pydantic import BaseModel
 import os
 import time
 from datetime import datetime
-
+import pandas as pd
+import json
 
 app = FastAPI()
 
@@ -160,7 +161,74 @@ async def get_file(file_name: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read file: {str(e)}")
 
+### Extract Data ENDPOINT ###
+def load_csv_config():
+    """
+    Load the CSV config
+    """
+    try:
+        with open("backend/csv_config.json", "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="CSV config file not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load CSV config: {str(e)}")
 
+def process_data(file_name: str):
+    """
+    Process the data from the CSV file
+    """
+    try:
+        # Load the CSV config
+        config = load_csv_config()
+        csv_format = config["csv_format_2025"]
+        columns = csv_format["columns"]
+        renamed_columns = csv_format["renamed_columns"]
+
+        # Load the CSV file and rename the columns
+        df = pd.read_csv(f"uploads/{file_name}").loc[:, columns.values()].rename(columns=renamed_columns)
+
+        # Validate the data
+        warnings = []
+        validation_config = csv_format["validations"]
+
+        for field, validation in validation_config.items():
+            if field in df.columns:
+                valid_values = validation["valid_values"]
+                invalid_values = df[~df[field].isin(valid_values)][field].unique()
+                
+                if len(invalid_values) > 0:
+                    warnings.append(f'Invalid {field} values: {list(invalid_values)}')
+
+        return {
+            "data": df.to_dict("records"),
+            "warnings": warnings,
+            "total_records": len(df),
+            "columns": list(df.columns)
+        }
+    
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="File not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process file: {str(e)}")
+
+
+
+class ExtractData(BaseModel):
+    file_name: str
+
+@app.post("/api/extract")
+async def extract_data_endpoint(data: ExtractData):
+    """
+    Extract data from a CSV file
+    """
+    try:
+        result = process_data(data.file_name)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to extract data: {str(e)}")
 
 
 

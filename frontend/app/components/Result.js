@@ -140,6 +140,32 @@ export default function Result() {
         }
     };
 
+    const extractData = async (fileName) => {
+        setIsLoading(true);
+        setError("");
+        
+        try {
+            const response = await fetch('http://localhost:8000/api/extract', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ file_name: fileName }),
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log("Data Response:", result.result);
+            } else {
+                console.error("Data Error:", response.status);
+                alert("Error connecting to API");
+            }
+
+        } catch (error) {
+            console.error('Extract error:', error);
+        }
+    }
+
     
 
     if (!isMounted) {
@@ -156,7 +182,6 @@ export default function Result() {
     return (
         <div className="flex flex-col gap-4 border-2 border-black rounded-md p-5 w-full h-full"> 
             <h2 className="text-xl font-bold text-center">Results</h2>
-            
             {/* File Container */}
             <div className="space-y-2">
                 <h3 className="text-lg font-semibold">Uploaded Files</h3>
@@ -308,6 +333,8 @@ export default function Result() {
                     </div>
                 ))}
             </div>
+            <button className="border-2 border-zinc-100 hover:bg-zinc-200 rounded-lg p-2  mx-auto"
+                onClick={() => extractData(selectedFile)}>Extract Data</button>
         </div>
     );
 }

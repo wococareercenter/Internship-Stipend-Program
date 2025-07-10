@@ -7,7 +7,7 @@ export default function Scale() {
 
     const [showFAFSA, setShowFAFSA] = useState(false);
     const [showPaid, setShowPaid] = useState(false);
-    const [showLocation, setShowLocation] = useState(false);
+    const [showInternshipType, setShowInternshipType] = useState(false);
 
     const [showCostOfLiving, setShowCostOfLiving] = useState(false);
     const [showCostOfLivingInput, setShowCostOfLivingInput] = useState(false);
@@ -38,7 +38,7 @@ export default function Scale() {
     });
 
     // Input In-Person or Remote variable and default value
-    const [location, setLocation] = useState({
+    const [internshipType, setInternshipType] = useState({
         inPerson: 5,
         hybrid: 4,
         virtual: 0,
@@ -169,7 +169,7 @@ export default function Scale() {
 
         setShowFAFSA(false);
         setShowPaid(false);
-        setShowLocation(false);
+        setShowInternshipType(false);
         setShowCostOfLiving(false);
         setShowTier1(false);
         setShowTier2(false);
@@ -181,7 +181,7 @@ export default function Scale() {
         const currentScale = {
             fafsaScale: fafsaScale,
             paid: paid,
-            location: location,
+            internshipType: internshipType,
             costOfLiving: costOfLiving
         };
 
@@ -315,39 +315,39 @@ export default function Scale() {
                         )}
                         
                         {/* In-Person or Remote */}
-                        <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowLocation(!showLocation)}>
+                        <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowInternshipType(!showInternshipType)}>
                             In-Person or Remote
                         </button>
-                        {showLocation && (
+                        {showInternshipType && (
                             <div className="flex flex-col justify-center gap-4 border-2 border-black rounded-md p-2 mx-auto">
                                 <div className="flex flex-row gap-4 justify-between items-center">
-                                    <label htmlFor="Location">In-Person</label>
+                                    <label htmlFor="Internship Type">In-Person</label>
                                     <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5"
-                                        value={location.inPerson}
-                                        onChange={(e) => setLocation({
-                                            ...location, // Default value
+                                        value={internshipType.inPerson}
+                                        onChange={(e) => setInternshipType({
+                                            ...internshipType, // Default value
                                             inPerson: parseInt(e.target.value) || 0 // New value
                                         })} 
                                     />
                                 </div>
                                 <hr className="border-2 border-black w-full h-px" />
                                 <div className="flex flex-row gap-4 justify-between items-center">
-                                    <label htmlFor="Location">Hybrid</label>
+                                    <label htmlFor="Internship Type">Hybrid</label>
                                     <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5"
-                                        value={location.hybrid}
-                                        onChange={(e) => setLocation({
-                                            ...location, // Default value
+                                        value={internshipType.hybrid}
+                                        onChange={(e) => setInternshipType({
+                                            ...internshipType, // Default value
                                             hybrid: parseInt(e.target.value) || 0 // New value
                                         })} 
                                     />
                                 </div>
                                 <hr className="border-2 border-black w-full h-px" />
                                 <div className="flex flex-row gap-4 justify-between items-center">
-                                    <label htmlFor="Location">Virtual</label>
+                                    <label htmlFor="Internship Type">Virtual</label>
                                     <input className="border-2 border-black rounded-md p-2" type="number" placeholder="0" min="0" max="5" 
-                                        value={location.virtual}
-                                        onChange={(e) => setLocation({
-                                            ...location, // Default value
+                                        value={internshipType.virtual}
+                                        onChange={(e) => setInternshipType({
+                                            ...internshipType, // Default value
                                             virtual: parseInt(e.target.value) || 0 // New value
                                         })} 
                                     />

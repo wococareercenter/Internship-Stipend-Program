@@ -11,6 +11,8 @@ export default function Scale() {
 
     const [showCostOfLiving, setShowCostOfLiving] = useState(false);
     const [showCostOfLivingInput, setShowCostOfLivingInput] = useState(false);
+    const [showCostOfLivingInput2, setShowCostOfLivingInput2] = useState(false);
+    const [showCostOfLivingInput3, setShowCostOfLivingInput3] = useState(false);
     const [showTier1, setShowTier1] = useState(false);
     const [showTier2, setShowTier2] = useState(false);
     const [showTier3, setShowTier3] = useState(false);
@@ -41,8 +43,20 @@ export default function Scale() {
     });
 
     // Input Cost of Living variable and default value
-    // TO DO: List of states but on frontend they reorganize by tiers dynamically
-    
+    const [costOfLiving, setCostOfLiving] = useState({
+        tier1: {
+            alabama: 5,
+            alaska: 4,
+        },
+        tier2: {
+            alabama: 5,
+            alaska: 4,
+        },
+        tier3: {
+            alabama: 5,
+            alaska: 4,
+        },
+    });
 
     useEffect(() => {
         setIsMounted(true);
@@ -243,57 +257,98 @@ export default function Scale() {
                         <div className="flex flex-row gap-4">
                             {/* Tier 1 */}
                             <div className="flex flex-col gap-4">
-                        <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowTier1(!showTier1)}>
-                            Tier 1
-                        </button>
-                        {showTier1 && (
-                            <div className="flex flex-col gap-4">
-                                <div className="flex flex-col gap-4 border-2 border-black rounded-md p-2 max-h-64 overflow-y-auto">
-                                    <div className="flex flex-row gap-4 justify-between items-center">
-                                        <label htmlFor="Cost of Living">Alabama</label>
-                                        {showCostOfLivingInput && (
-                                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5" />
-                                        )}
-                                    </div>
-                                    <hr className="border-2 border-black w-full h-px" />
-                                    <div className="flex flex-row gap-4 justify-between items-center">
-                                        <label htmlFor="Cost of Living">Alaska</label>
-                                        {showCostOfLivingInput && (
-                                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                                        )}
-                                    </div>
-                                    <hr className="border-2 border-black w-full h-px" />
-                                </div>
-                                <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" 
-                                    onClick={() => setShowCostOfLivingInput(!showCostOfLivingInput)}>
-                                        {showCostOfLivingInput ? "Save Tier 1" : "Edit Tier 1"}
+                                <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowTier1(!showTier1)}>
+                                    Tier 1
                                 </button>
+                                {showTier1 && (
+                                    <div className="flex flex-col gap-4">
+                                        <div className="flex flex-col gap-4 border-2 border-black rounded-md p-2 max-h-64 overflow-y-auto">
+                                            <div className="flex flex-row gap-4 justify-between items-center">
+                                                <label htmlFor="Cost of Living">Alabama</label>
+                                                {showCostOfLivingInput && (
+                                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5" />
+                                                )}
+                                            </div>
+                                            <hr className="border-2 border-black w-full h-px" />
+                                            <div className="flex flex-row gap-4 justify-between items-center">
+                                                <label htmlFor="Cost of Living">Alaska</label>
+                                                {showCostOfLivingInput && (
+                                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
+                                                )}
+                                            </div>
+                                            <hr className="border-2 border-black w-full h-px" />
+                                        </div>
+                                        <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" 
+                                            onClick={() => setShowCostOfLivingInput(!showCostOfLivingInput)}>
+                                                {showCostOfLivingInput ? "Save Tier 1" : "Edit Tier 1"}
+                                        </button>
+                                    </div>
+                    
+                                )}
                             </div>
-            
-                        )}
-                        </div>
-                        <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowTier2(!showTier2)}>
-                            Tier 2
-                        </button>
-                        {showTier2 && (
-                            <div className="flex flex-col gap-4 border-2 border-black rounded-md p-2 max-h-96 overflow-y-auto">
-                                <div className="flex flex-row gap-4 justify-between items-center">
-                                    <label htmlFor="Cost of Living">Alabama</label>
-                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5" />
-                                </div>
+
+                            {/* Tier 2 */}
+                            <div className="flex flex-col gap-4">
+                                <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowTier2(!showTier2)}>
+                                    Tier 2
+                                </button>
+                                {showTier2 && (
+                                    <div className="flex flex-col gap-4">
+                                        <div className="flex flex-col gap-4 border-2 border-black rounded-md p-2 max-h-64 overflow-y-auto">
+                                            <div className="flex flex-row gap-4 justify-between items-center">
+                                                <label htmlFor="Cost of Living">Alabama</label>
+                                                {showCostOfLivingInput2 && (
+                                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5" />
+                                                )}
+                                            </div>
+                                            <hr className="border-2 border-black w-full h-px" />
+                                            <div className="flex flex-row gap-4 justify-between items-center">
+                                                <label htmlFor="Cost of Living">Alaska</label>
+                                                {showCostOfLivingInput2 && (
+                                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
+                                                )}
+                                            </div>
+                                            <hr className="border-2 border-black w-full h-px" />
+                                        </div>
+                                        <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" 
+                                            onClick={() => setShowCostOfLivingInput2(!showCostOfLivingInput2)}>
+                                                {showCostOfLivingInput2 ? "Save Tier 2" : "Edit Tier 2"}
+                                        </button>
+                                    </div>
+                    
+                                )}
                             </div>
-                        )}
-                        <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowTier3(!showTier3)}>
-                            Tier 3
-                        </button>
-                        {showTier3 && (
-                            <div className="flex flex-col gap-4 border-2 border-black rounded-md p-2 max-h-96 overflow-y-auto">
-                                <div className="flex flex-row gap-4 justify-between items-center">
-                                    <label htmlFor="Cost of Living">Alabama</label>
-                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5" />
-                                </div>
+
+                            {/* Tier 3 */}
+                            <div className="flex flex-col gap-4">
+                                <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowTier3(!showTier3)}>
+                                    Tier 3
+                                </button>
+                                {showTier3 && (
+                                    <div className="flex flex-col gap-4">
+                                        <div className="flex flex-col gap-4 border-2 border-black rounded-md p-2 max-h-64 overflow-y-auto">
+                                            <div className="flex flex-row gap-4 justify-between items-center">
+                                                <label htmlFor="Cost of Living">Alabama</label>
+                                                {showCostOfLivingInput3 && (
+                                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5" />
+                                                )}
+                                            </div>
+                                            <hr className="border-2 border-black w-full h-px" />
+                                            <div className="flex flex-row gap-4 justify-between items-center">
+                                                <label htmlFor="Cost of Living">Alaska</label>
+                                                {showCostOfLivingInput3 && (
+                                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
+                                                )}
+                                            </div>
+                                            <hr className="border-2 border-black w-full h-px" />
+                                        </div>
+                                        <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" 
+                                            onClick={() => setShowCostOfLivingInput3(!showCostOfLivingInput3)}>
+                                                {showCostOfLivingInput3 ? "Save Tier 3" : "Edit Tier 3"}
+                                        </button>
+                                    </div>
+                                )} 
                             </div>
-                        )}
                     </div>
                         // <div className="flex flex-col gap-4 border-2 border-black rounded-md p-2 max-h-96 overflow-y-auto">
                         //     <div className="flex flex-row gap-4 justify-between items-center">

@@ -43,24 +43,113 @@ export default function Scale() {
     });
 
     // Input Cost of Living variable and default value
-    const [costOfLiving, setCostOfLiving] = useState({
+    const defaultCostOfLiving = {
         tier1: {
-            alabama: 5,
-            alaska: 4,
+            Mississippi: 1, 
+            Arkansas: 1,
+            Missouri: 1,
+            Michigan: 1,
+            Tennessee: 1,
+            Ohio: 1,
+            Oklahoma: 1,
+            Georgia: 1,
+            Alabama: 1,
+            Indiana: 1,
+            WestVirginia: 1,
+            Texas: 1,
+            Kansas: 1,
+            Iowa: 1,
         },
         tier2: {
-            alabama: 5,
-            alaska: 4,
+            NorthCarolina: 3,
+            Illinois: 3,
+            Wisconsin: 3,
+            Nebraska: 3,
+            Idaho: 3,
+            SouthDakota: 3,
+            NewMexico: 3,
+            Florida: 3,
+            Pennsylvania: 3,
+            Minnesota: 3,
+            Virginia: 3,
+            Utah: 3,
+            Wyoming: 3,
+            NorthDakota: 3,
+            SouthCarolina: 3,
+            International: 3,
+            Louisiana: 3,
+            Kentucky: 3,
+            Nevada: 3,
         },
         tier3: {
-            alabama: 5,
-            alaska: 4,
+            Montana: 5, 
+            Colorado: 5,
+            NewYork: 5,
+            Washington: 5,
+            Maine: 5,
+            Oregon: 5,
+            Vermont: 5,
+            NewJersey: 5,
+            NewHampshire: 5,
+            Maryland: 5,
+            RhodeIsland: 5,
+            Connecticut: 5,
+            Massachusetts: 5,
+            Hawaii: 5,
+            California: 5,
+            Alaska: 5,
+            DistrictOfColumbia: 5,
+            Delaware: 5,
+            Arizona: 5,
         },
+    };
+
+    // Load from session storage or use default
+    const [costOfLiving, setCostOfLiving] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const saved = sessionStorage.getItem('costOfLiving');
+            return saved ? JSON.parse(saved) : defaultCostOfLiving;
+        }
+        return defaultCostOfLiving;
     });
 
     useEffect(() => {
         setIsMounted(true);
     }, []);
+
+    // Save to session storage whenever costOfLiving changes
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem('costOfLiving', JSON.stringify(costOfLiving));
+        }
+    }, [costOfLiving]);
+
+    // Function to move state to different tier
+    const moveStateToTier = (stateName, newTier) => {
+        const tierValues = { 1: 1, 2: 3, 3: 5 };
+        const newValue = tierValues[newTier];
+        
+        // Remove from all tiers first
+        const updatedCostOfLiving = {
+            tier1: { ...costOfLiving.tier1 },
+            tier2: { ...costOfLiving.tier2 },
+            tier3: { ...costOfLiving.tier3 }
+        };
+        
+        delete updatedCostOfLiving.tier1[stateName];
+        delete updatedCostOfLiving.tier2[stateName];
+        delete updatedCostOfLiving.tier3[stateName];
+        
+        // Add to new tier
+        updatedCostOfLiving[`tier${newTier}`][stateName] = newValue;
+        
+        setCostOfLiving(updatedCostOfLiving);
+    };
+
+    // Function to check if tier is empty and collapse it
+    const isTierEmpty = (tier) => {
+        return Object.keys(costOfLiving[tier]).length === 0;
+    };
 
     if (!isMounted) {
         return (
@@ -79,7 +168,8 @@ export default function Scale() {
         const currentScale = {
             fafsaScale: fafsaScale,
             paid: paid,
-            location: location
+            location: location,
+            costOfLiving: costOfLiving
         };
 
         console.log({scale: currentScale});
@@ -113,7 +203,7 @@ export default function Scale() {
             </button>
             {showScale && (
             <div className="flex flex-col gap-4 border-2 border-black rounded-md p-2 mx-auto">
-                <form className="flex flex-col gap-4 justify-center max-w-md mx-auto">
+                <form className="flex flex-col gap-4 justify-center max-w-md mx-auto" onSubmit={(e) => e.preventDefault()}>
                     {/* FAFSA */}
                     <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowFAFSA(!showFAFSA)}>
                         FAFSA
@@ -256,353 +346,119 @@ export default function Scale() {
                     {showCostOfLiving && (
                         <div className="flex flex-row gap-4">
                             {/* Tier 1 */}
-                            <div className="flex flex-col gap-4">
-                                <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowTier1(!showTier1)}>
-                                    Tier 1
-                                </button>
-                                {showTier1 && (
+                            {!isTierEmpty('tier1') && (
+                                <div className="flex flex-col gap-4">
+                                    <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowTier1(!showTier1)}>
+                                        Tier 1
+                                    </button>
+                                    {showTier1 && (
                                     <div className="flex flex-col gap-4">
-                                        <div className="flex flex-col gap-4 border-2 border-black rounded-md p-2 max-h-64 overflow-y-auto">
-                                            <div className="flex flex-row gap-4 justify-between items-center">
-                                                <label htmlFor="Cost of Living">Alabama</label>
-                                                {showCostOfLivingInput && (
-                                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5" />
-                                                )}
-                                            </div>
-                                            <hr className="border-2 border-black w-full h-px" />
-                                            <div className="flex flex-row gap-4 justify-between items-center">
-                                                <label htmlFor="Cost of Living">Alaska</label>
-                                                {showCostOfLivingInput && (
-                                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                                                )}
-                                            </div>
-                                            <hr className="border-2 border-black w-full h-px" />
+                                        <div className="overflow-y-auto max-h-72">
+                                            {Object.keys(costOfLiving.tier1).map((state) => (
+                                                <div key={state} className="flex flex-row gap-4 justify-between items-center h-10">
+                                                    <label htmlFor="Cost of Living">{state}</label>
+                                                    {showCostOfLivingInput && (
+                                                        <select 
+                                                            className="border-2 border-black rounded-md p-2" 
+                                                            value={1}
+                                                            onChange={(e) => {
+                                                                e.preventDefault();
+                                                                moveStateToTier(state, parseInt(e.target.value));
+                                                            }}
+                                                        >
+                                                            <option value={1}>Tier 1</option>
+                                                            <option value={2}>Tier 2</option>
+                                                            <option value={3}>Tier 3</option>
+                                                        </select>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
                                         <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" 
                                             onClick={() => setShowCostOfLivingInput(!showCostOfLivingInput)}>
                                                 {showCostOfLivingInput ? "Save Tier 1" : "Edit Tier 1"}
-                                        </button>
+                                         </button>
                                     </div>
-                    
                                 )}
                             </div>
+                            )}
 
                             {/* Tier 2 */}
-                            <div className="flex flex-col gap-4">
-                                <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowTier2(!showTier2)}>
-                                    Tier 2
-                                </button>
+                            {!isTierEmpty('tier2') && (
+                                <div className="flex flex-col gap-4">
+                                    <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowTier2(!showTier2)}>
+                                        Tier 2
+                                    </button>
                                 {showTier2 && (
                                     <div className="flex flex-col gap-4">
-                                        <div className="flex flex-col gap-4 border-2 border-black rounded-md p-2 max-h-64 overflow-y-auto">
-                                            <div className="flex flex-row gap-4 justify-between items-center">
-                                                <label htmlFor="Cost of Living">Alabama</label>
-                                                {showCostOfLivingInput2 && (
-                                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5" />
-                                                )}
-                                            </div>
-                                            <hr className="border-2 border-black w-full h-px" />
-                                            <div className="flex flex-row gap-4 justify-between items-center">
-                                                <label htmlFor="Cost of Living">Alaska</label>
-                                                {showCostOfLivingInput2 && (
-                                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                                                )}
-                                            </div>
-                                            <hr className="border-2 border-black w-full h-px" />
+                                        <div className="overflow-y-auto max-h-72">
+                                            {Object.keys(costOfLiving.tier2).map((state) => (
+                                                <div key={state} className="flex flex-row gap-4 justify-between items-center h-10">
+                                                    <label htmlFor="Cost of Living">{state}</label>
+                                                    {showCostOfLivingInput2 && (
+                                                        <select 
+                                                            className="border-2 border-black rounded-md p-2"
+                                                            value={2}
+                                                            onChange={(e) => {
+                                                                e.preventDefault();
+                                                                moveStateToTier(state, parseInt(e.target.value));
+                                                            }}
+                                                        >
+                                                            <option value={1}>Tier 1</option>
+                                                            <option value={2}>Tier 2</option>
+                                                            <option value={3}>Tier 3</option>
+                                                        </select>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
-                                        <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" 
+                                        <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2"
                                             onClick={() => setShowCostOfLivingInput2(!showCostOfLivingInput2)}>
                                                 {showCostOfLivingInput2 ? "Save Tier 2" : "Edit Tier 2"}
                                         </button>
                                     </div>
-                    
                                 )}
                             </div>
+                            )}
 
                             {/* Tier 3 */}
-                            <div className="flex flex-col gap-4">
-                                <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowTier3(!showTier3)}>
-                                    Tier 3
-                                </button>
+                            {!isTierEmpty('tier3') && (
+                                <div className="flex flex-col gap-4">
+                                    <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowTier3(!showTier3)}>
+                                        Tier 3
+                                    </button>
                                 {showTier3 && (
                                     <div className="flex flex-col gap-4">
-                                        <div className="flex flex-col gap-4 border-2 border-black rounded-md p-2 max-h-64 overflow-y-auto">
-                                            <div className="flex flex-row gap-4 justify-between items-center">
-                                                <label htmlFor="Cost of Living">Alabama</label>
-                                                {showCostOfLivingInput3 && (
-                                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5" />
-                                                )}
-                                            </div>
-                                            <hr className="border-2 border-black w-full h-px" />
-                                            <div className="flex flex-row gap-4 justify-between items-center">
-                                                <label htmlFor="Cost of Living">Alaska</label>
-                                                {showCostOfLivingInput3 && (
-                                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                                                )}
-                                            </div>
-                                            <hr className="border-2 border-black w-full h-px" />
+                                        <div className="overflow-y-auto max-h-72">
+                                            {Object.keys(costOfLiving.tier3).map((state) => (
+                                                <div key={state} className="flex flex-row gap-4 justify-between items-center h-10">
+                                                    <label htmlFor="Cost of Living">{state}</label>
+                                                    {showCostOfLivingInput3 && (
+                                                        <select 
+                                                            className="border-2 border-black rounded-md p-2"
+                                                            value={3}
+                                                            onChange={(e) => {
+                                                                e.preventDefault();
+                                                                moveStateToTier(state, parseInt(e.target.value));
+                                                            }}
+                                                        >
+                                                            <option value={1}>Tier 1</option>
+                                                            <option value={2}>Tier 2</option>
+                                                            <option value={3}>Tier 3</option>
+                                                        </select>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
-                                        <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" 
-                                            onClick={() => setShowCostOfLivingInput3(!showCostOfLivingInput3)}>
-                                                {showCostOfLivingInput3 ? "Save Tier 3" : "Edit Tier 3"}
+                                        <button className="border-2 border-black rounded-md p-2" onClick={() => setShowCostOfLivingInput3(!showCostOfLivingInput3)}>
+                                            {showCostOfLivingInput3? "Save Tier 3" : " Edit Tier 3"}
                                         </button>
                                     </div>
                                 )} 
                             </div>
+                            )}
                     </div>
-                        // <div className="flex flex-col gap-4 border-2 border-black rounded-md p-2 max-h-96 overflow-y-auto">
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Alabama</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Alaska</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Arizona</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Arkansas</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">California</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Colorado</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Connecticut</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Delaware</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Florida</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Georgia</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Hawaii</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Idaho</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Illinois</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Indiana</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Iowa</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Kansas</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Kentucky</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Louisiana</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Maine</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Maryland</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Massachusetts</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Michigan</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Minnesota</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Mississippi</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Missouri</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Montana</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Nebraska</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Nevada</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">New Hampshire</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">New Jersey</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">New Mexico</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">New York</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">North Carolina</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">North Dakota</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Ohio</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Oklahoma</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Oregon</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Pennsylvania</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Rhode Island</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">South Carolina</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">South Dakota</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Tennessee</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Texas</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Utah</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Vermont</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Virginia</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Washington</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">West Virginia</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Wisconsin</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                        //     <div className="flex flex-row gap-4 justify-between items-center">
-                        //         <label htmlFor="Cost of Living">Wyoming</label>
-                        //         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" />
-                        //     </div>
-                        //     <hr className="border-2 border-black w-full h-px" />
-                            
-                        // </div>  
+                      
                     )}
                     
                     <button className=" bg-green-600 text-white hover:bg-green-700 rounded-md p-2" type="submit" onClick={handleSubmit}>Save</button>

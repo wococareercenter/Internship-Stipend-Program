@@ -167,7 +167,7 @@ def load_csv_config():
     Load the CSV config
     """
     try:
-        with open("backend/csv_config.json", "r") as f:
+        with open("../csv_config.json", "r") as f:
             return json.load(f)
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="CSV config file not found")
@@ -186,7 +186,7 @@ def process_data(file_name: str):
         renamed_columns = csv_format["renamed_columns"]
 
         # Load the CSV file and rename the columns
-        df = pd.read_csv(f"uploads/{file_name}").loc[:, columns.values()].rename(columns=renamed_columns)
+        df = pd.read_csv(f"../uploads/{file_name}").loc[:, columns.values()].rename(columns=renamed_columns)
 
         # Validate the data
         warnings = []

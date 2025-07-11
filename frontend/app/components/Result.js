@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { CsvToHtmlTable } from "react-csv-to-table";
 
 export default function Result() {
-    const [uploadedFiles, setUploadedFiles] = useState([]);
+    const [currentFile, setCurrentFile] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const [csvData, setCsvData] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -13,12 +13,11 @@ export default function Result() {
 
     useEffect(() => {
         setIsMounted(true);
-        fetchUploadedFiles();
+        fetchCurrentFile();
         
         // Listen for file upload events
         const handleFileUploaded = (event) => {
-            fetchUploadedFiles();
-            
+            fetchCurrentFile();
         };
         
         window.addEventListener('fileUploaded', handleFileUploaded);
@@ -29,7 +28,7 @@ export default function Result() {
         };
     }, []);
 
-    const fetchUploadedFiles = async () => {
+    const fetchCurrentFile = async () => {
         setIsLoading(true);
         setError("");
         
@@ -42,10 +41,10 @@ export default function Result() {
             }
             
             const data = await response.json();
-            setUploadedFiles(data.files || []);
+            setCurrentFile(data.file);
         } catch (err) {
-            setError('Failed to load uploaded files');
-            console.error('Error fetching files:', err);
+            setError('Failed to load current file');
+            console.error('Error fetching file:', err);
         } finally {
             setIsLoading(false);
         }
@@ -139,9 +138,9 @@ export default function Result() {
             {/* File Container */}
             <div className="space-y-2">
                 <h3 className="text-lg font-semibold">Current File</h3>
-                {isLoading && uploadedFiles.length === 0 && (
+                {isLoading && !currentFile && (
                     <div className="text-center py-4">
-                        <div className="text-gray-500">Loading files...</div>
+                        <div className="text-gray-500">Loading file...</div>
                     </div>
                 )}
                 
@@ -157,46 +156,45 @@ export default function Result() {
                     </div>
                 )}
                 
-                {uploadedFiles.length === 0 && !isLoading && (
+                {!currentFile && !isLoading && (
                     <div className="text-center py-4">
                         <p className="text-gray-500">No file uploaded yet</p>
                     </div>
                 )}
                 
                 {/* File Display */}
-                {uploadedFiles.map((file, index) => (
+                {currentFile && (
                     <div 
-                        key={index}
                         className="border rounded-md transition-colors border-gray-200 hover:border-gray-300"
                     >
                         <div 
                             className="flex items-center justify-between p-3 cursor-pointer"
                             onClick={() => {
-                                if (selectedFile === file.name) {
+                                if (selectedFile === currentFile.name) {
                                     // Close if already open
                                     setSelectedFile(null);
                                     setCsvData("");
                                 } else {
                                     // Open this file
-                                    loadCsvFile(file.name);
+                                    loadCsvFile(currentFile.name);
                                 }
                             }}
                         >
                             <div className="flex-1">
-                                <p className="font-medium text-sm">{file.name}</p>
+                                <p className="font-medium text-sm">{currentFile.name}</p>
                                 <p className="text-xs text-gray-500">
-                                    {formatFileSize(file.size)} • {formatDate(file.uploadDate)}
+                                    {formatFileSize(currentFile.size)} • {formatDate(currentFile.uploadDate)}
                                 </p>
                             </div>
                             <div className="flex items-center gap-2">
-                                {file.name.toLowerCase().endsWith('.csv') && (
+                                {currentFile.name.toLowerCase().endsWith('.csv') && (
                                     <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
                                         CSV
                                     </span>
                                 )}
                                 <svg 
                                     className={`w-4 h-4 text-gray-500 transition-transform ${
-                                        selectedFile === file.name ? 'rotate-180' : ''
+                                        selectedFile === currentFile.name ? 'rotate-180' : ''
                                     }`}
                                     fill="none" 
                                     stroke="currentColor" 
@@ -208,7 +206,7 @@ export default function Result() {
                         </div>
 
                         {/* CSV Preview Dropdown */}
-                        {selectedFile === file.name && csvData && (
+                        {selectedFile === currentFile.name && csvData && (
                             <div className="border-t border-gray-200 bg-white">
                                 <div className="p-4">
                                     <div className="flex items-center justify-between mb-4">
@@ -254,7 +252,7 @@ export default function Result() {
                         )}
 
                         {/* Loading State for CSV */}
-                        {selectedFile === file.name && isLoading && (
+                        {selectedFile === currentFile.name && isLoading && (
                             <div className="border-t border-gray-200 bg-white p-4">
                                 <div className="text-center">
                                     <div className="text-gray-500 text-sm">Loading CSV preview...</div>
@@ -262,12 +260,12 @@ export default function Result() {
                             </div>
                         )}
                     </div>
-                ))}
+                )}
             </div>
-            {uploadedFiles.length > 0 && (
+            {currentFile && (
                 <button 
                     className="border-2 border-zinc-100 hover:bg-zinc-200 hover:border-zinc-300 rounded-lg p-2 mx-auto transition-colors"
-                    onClick={() => extractData(uploadedFiles[0].name)}
+                    onClick={() => extractData(currentFile.name)}
                     disabled={isLoading}
                 >
                     {isLoading ? 'Extracting...' : 'Extract Data'}

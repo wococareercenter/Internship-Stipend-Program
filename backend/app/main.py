@@ -48,19 +48,22 @@ async def list_files():
         if not os.path.exists(uploads_dir):
             return {"files": []}
         
+        # Check if there's a file in uploads directory
         files = []
         for filename in os.listdir(uploads_dir):
             file_path = os.path.join(uploads_dir, filename)
             if os.path.isfile(file_path):
                 stat = os.stat(file_path)
-                files.append({
-                    "name": filename,
-                    "size": stat.st_size,
-                    "uploadDate": datetime.fromtimestamp(stat.st_mtime).isoformat()
-                })
+                return {
+                    "file": {
+                        "name": filename,
+                        "size": stat.st_size,
+                        "uploadDate": datetime.fromtimestamp(stat.st_mtime).isoformat()
+                    }
+                }
         
-        # Since we only keep one file, return it directly
-        return {"files": files}
+        # No file found
+        return {"file": None}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to list files: {str(e)}")
 

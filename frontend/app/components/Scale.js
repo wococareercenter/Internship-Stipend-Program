@@ -3,6 +3,9 @@ import { useState, useEffect } from "react";
 import { useScale } from "../context/ScaleContext";
 
 export default function Scale() {
+    // All hooks must be called at the top level, before any conditional returns
+    const { updateScale } = useScale();
+    
     // Dropdown Variables
     const [showScale, setShowScale] = useState(false);
 
@@ -168,6 +171,73 @@ export default function Scale() {
         return Object.keys(costOfLiving[tier]).length === 0;
     };
 
+    // Function to reset all scales to default values
+    const handleReset = async () => {
+        setFafsaScale({
+            veryHighNeed: 5,
+            highNeed: 4,
+            moderateNeed: 3,
+            lowNeed: 2,
+            noNeed: 0,
+        });
+        setPaid({
+            paid: 4,
+            unpaid: 5,
+        });
+        setInternshipType({
+            inPerson: 5,
+            hybrid: 4,
+            virtual: 0,
+        });
+        setCostOfLiving(defaultCostOfLiving);
+        
+        // Clear session storage
+        if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('costOfLiving');
+        }
+        
+        setSuccessMessage("Scale reset to default values");
+        setTimeout(() => setSuccessMessage(""), 3000);
+
+        // Call handleSubmit without event parameter
+        const currentScale = {
+            fafsa_scale: fafsaScale,
+            paid: paid,
+            internship_type: internshipType,
+            cost_of_living: costOfLiving
+        };
+
+        console.log({scale: currentScale});
+
+        // Update the context
+        updateScale(currentScale);
+
+        try {
+            const response = await fetch("http://localhost:8000/api/scale", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({scale: currentScale}),
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                console.log("API Response:", result.result);
+                setSuccessMessage("Scale saved successfully");
+                setTimeout(()=> setSuccessMessage(""), 3000);
+                setShowScale(false);
+            } else {
+                console.error("API Error:", response.status);
+                alert("Error connecting to API");
+            }
+        } catch (error) {
+            console.error("Fetch Error:", error);
+            alert("Error connecting to API");
+        }
+        setShowScale(false);
+    };
+
     if (!isMounted) {
         return (
             <div className="flex flex-col gap-4 border-2 border-black rounded-md p-5 min-w-fit"> 
@@ -205,8 +275,6 @@ export default function Scale() {
                 break;
         }
     }
-
-    const { updateScale } = useScale();
 
     // Submit Function
     const handleSubmit = async (e) => {
@@ -599,7 +667,10 @@ export default function Scale() {
                                 </div>
                             )}
                             
-                            <button className="bg-green-600 text-white hover:bg-green-700 rounded-md p-2" type="submit" onClick={handleSubmit}>Save</button>
+                            <div className="flex gap-2 justify-center">
+                                <button className="bg-green-600 text-white hover:bg-green-700 rounded-md p-2" type="submit" onClick={handleSubmit}>Save</button>
+                                <button className="bg-red-600 text-white hover:bg-red-700 rounded-md p-2" type="button" onClick={handleReset}>Reset to Default</button>
+                            </div>
                         </form>
                     </div>
                 )}

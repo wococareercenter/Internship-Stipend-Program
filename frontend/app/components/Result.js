@@ -9,6 +9,16 @@ export default function Result() {
     const [extractedData, setExtractedData] = useState(null);
     const [error, setError] = useState(null);
 
+    // Function to format state names with spaces for display
+    const formatStateName = (stateName) => {
+        if (!stateName || stateName === 'N/A' || stateName === 'Unknown') {
+            return stateName;
+        }
+        
+        // Add spaces before capital letters (except the first character)
+        return stateName.replace(/([A-Z])/g, ' $1').trim();
+    };
+
     useEffect(() => {
         // console.log("Component mounted, starting fetch...");
         setIsMounted(true);
@@ -178,7 +188,7 @@ export default function Result() {
                                                         {/* Location */}
                                                         <tr className="border-b">            
                                                             <td className="text-sm text-left border-r">
-                                                                <span className={invalidFields.includes('location') ? 'bg-red-200 px-1 rounded' : ''}>{item.location || 'N/A'}</span>
+                                                                <span className={invalidFields.includes('location') ? 'bg-red-200 px-1 rounded' : ''}>{formatStateName(item.location) || 'N/A'}</span>
                                                             </td>
                                                                                                                          <td className="text-sm text-right py-1">{item.score_breakdown.location !== undefined ? item.score_breakdown.location : 'N/A'}</td>
                                                         </tr>
@@ -211,13 +221,6 @@ export default function Result() {
                                                 </table>
                                             </div>
                                         </div>
-                                        {/* <p><strong>School Year:</strong> <span className={invalidFields.includes('school_year') ? 'bg-red-200 px-1 rounded' : ''}>{item.school_year || 'N/A'}</span></p>
-                                        <p><strong>Accepted Internship:</strong> <span className={invalidFields.includes('accepted_internship') ? 'bg-red-200 px-1 rounded' : ''}>{item.accepted_internship || 'N/A'}</span></p>
-                                        <p><strong>Additional Funding:</strong> <span className={invalidFields.includes('additional_funding') ? 'bg-red-200 px-1 rounded' : ''}>{item.additional_funding || 'N/A'}</span></p>
-                                        <p><strong>Location:</strong> <span className={invalidFields.includes('location') ? 'bg-red-200 px-1 rounded' : ''}>{item.location || 'N/A'}</span></p>
-                                        <p><strong>Need Level:</strong> <span className={invalidFields.includes('need_level') ? 'bg-red-200 px-1 rounded' : ''}>{item.need_level || 'N/A'}</span></p>
-                                        <p><strong>Internship Type:</strong> <span className={invalidFields.includes('internship_type') ? 'bg-red-200 px-1 rounded' : ''}>{item.internship_type || 'N/A'}</span></p>
-                                        <p><strong>Hours:</strong> <span className={invalidFields.includes('hours') ? 'bg-red-200 px-1 rounded' : ''}>{item.hours || 'N/A'}</span></p> */}
                                     </div>
 
                                 );
@@ -226,8 +229,8 @@ export default function Result() {
 
                         {extractedData.warnings && extractedData.warnings.length > 0 && (
                             <div className="mt-2">
-                                <p className="text-yellow-600 font-semibold">Warnings:</p>
-                                <ul className="text-sm text-yellow-600">
+                                <p className="text-yellow-600 font-semibold">Sorry Jenn, I'm not sure what to do with these values so I can't add them to the score:</p>
+                                <ul className="text-sm text-red-600">
                                     {extractedData.warnings.map((warning, index) => (
                                         <li key={index}>{warning}</li>
                                     ))}

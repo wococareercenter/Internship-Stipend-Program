@@ -6,8 +6,13 @@ import time
 from datetime import datetime
 import pandas as pd
 import json
+from dotenv import load_dotenv
+from openai import OpenAI
 
 app = FastAPI()
+
+# Global cache for cleaned locations to avoid re-cleaning
+location_cache = {}
 
 origins = [
     "http://localhost:3000",
@@ -36,6 +41,24 @@ class Scale(BaseModel):
 async def scale_post(data: Scale):
     print(f"POST received: {data.scale}")
     return {"result": data.scale}
+
+### CACHE ENDPOINT ###
+@app.get("/api/cache")
+async def get_cache():
+    """Get the current location cache"""
+    global location_cache
+    return {
+        "cache_size": len(location_cache),
+        "cached_locations": location_cache
+    }
+
+@app.delete("/api/cache")
+async def clear_cache():
+    """Clear the location cache"""
+    global location_cache
+    cache_size = len(location_cache)
+    location_cache.clear()
+    return {"message": f"Cache cleared. Removed {cache_size} cached locations."}
 
 ### FILE ENDPOINT ###
 @app.get("/api/file")
@@ -152,6 +175,85 @@ class ExtractData(BaseModel):
     file_name: str
     scale: dict
 
+# Clean Location Column
+def clean_location_column(df):
+    """
+    Clean the location column using LLM
+    """
+    load_dotenv('.env')
+    api_key = os.environ.get('OPENAI_API_KEY')
+    
+    if not api_key:
+        print("Warning: OPENROUTER_API_KEY not found, skipping location cleaning")
+        return df
+    
+    client = OpenAI(api_key=api_key)
+    
+    def get_location(location):
+        """Get cleaned location from LLM"""
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{
+                    "role": "user",
+                    "content": f"""
+                        Extract the state from this location: '{location}'
+                        Return only the state name with no spaces (e.g., 'NewYork', 'California', 'Texas')
+                        If no state is found, return 'Unknown'
+                        Examples:
+                        - 'New York, NY' -> 'NewYork'
+                        - 'Los Angeles, CA' -> 'California'
+                        - 'South Carolina' -> 'SouthCarolina'
+                    """
+                }]
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            print(f"Error cleaning location '{location}': {e}")
+            return "Unknown"
+    
+    # Clean locations using ThreadPoolExecutor for efficiency
+    from concurrent.futures import ThreadPoolExecutor
+    
+    clean_df = df.copy()
+    locations = list(clean_df['location'].dropna().unique())  # Get unique locations
+    
+    # Check cache first and only clean new locations
+    location_mapping = {}
+    locations_to_clean = []
+    
+    for loc in locations:
+        if loc in location_cache:
+            location_mapping[loc] = location_cache[loc]
+            print(f"'{loc}' -> '{location_cache[loc]}' (from cache)")
+        else:
+            locations_to_clean.append(loc)
+    
+    if locations_to_clean:
+        print(f"Cleaning {len(locations_to_clean)} new unique locations...")
+        
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = {executor.submit(get_location, loc): loc for loc in locations_to_clean}
+            
+            for future in futures:
+                original_loc = futures[future]
+                try:
+                    cleaned_loc = future.result()
+                    location_mapping[original_loc] = cleaned_loc
+                    location_cache[original_loc] = cleaned_loc  # Store in cache
+                    print(f"'{original_loc}' -> '{cleaned_loc}' (new)")
+                except Exception as e:
+                    print(f"Error processing '{original_loc}': {e}")
+                    location_mapping[original_loc] = "Unknown"
+                    location_cache[original_loc] = "Unknown"  # Store in cache
+    else:
+        print("All locations found in cache, no LLM calls needed!")
+    
+    # Apply the mapping to the dataframe
+    clean_df['location'] = clean_df['location'].map(location_mapping).fillna("Unknown")
+    
+    return clean_df
+
 # Process Data
 def process_data(file_name: str, scale: dict = None):
     """
@@ -178,9 +280,9 @@ def process_data(file_name: str, scale: dict = None):
        
 
         ### DEBUG ###
-        print(f"Available columns in CSV: {list(df.columns)}")
-        print("--------------------------------")
-        print(f"Expected columns from config: {expected_columns}")
+        # print(f"Available columns in CSV: {list(df.columns)}")
+        # print("--------------------------------")
+        # print(f"Expected columns from config: {expected_columns}")
 
         # Check which columns are missing
         missing_columns = [col for col in expected_columns if col not in df.columns]
@@ -226,6 +328,9 @@ def process_data(file_name: str, scale: dict = None):
                 if len(invalid_values) > 0:
                     warnings.append(f'Invalid {field} values: {invalid_values}')
 
+        # clean the location column
+        df = clean_location_column(df)
+        
         # Convert DataFrame to records, handling NaN values
         records = df.to_dict("records")
         
@@ -283,8 +388,20 @@ def process_data(file_name: str, scale: dict = None):
                 score_breakdown['internship_type'] = type_score
                 score += type_score
 
-            # Location scoring
-            # comeback to this -> need to clean the location column
+            # Location scoring (look up in cost of living tiers)
+            if record.get('location'):
+                location_score = 0
+                location = record['location']
+                
+                # Look up in cost of living tiers
+                cost_of_living = scale['costOfLiving']
+                for tier_name, tier_states in cost_of_living.items():
+                    if location in tier_states:
+                        location_score = tier_states[location]
+                        break
+                
+                score_breakdown['location'] = location_score
+                score += location_score
 
             record['score'] = score
             record['score_breakdown'] = score_breakdown

@@ -59,9 +59,7 @@ async def list_files():
                     "uploadDate": datetime.fromtimestamp(stat.st_mtime).isoformat()
                 })
         
-        # Sort files by upload date (newest first)
-        files.sort(key=lambda x: x["uploadDate"], reverse=True)
-        
+        # Since we only keep one file, return it directly
         return {"files": files}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to list files: {str(e)}")
@@ -90,10 +88,16 @@ async def upload_file(file: UploadFile):
                 status_code=400,
                 detail=f"File size too large."
             )
-        # Generate unique filename
-        timestamp = int(time.time())
-        unique_filename = f"{timestamp}_{file.filename}"
-        file_path = os.path.join("uploads", unique_filename)
+        # Use original filename (will replace if exists)
+        file_path = os.path.join("uploads", file.filename)
+
+        # Delete any existing files in uploads directory
+        uploads_dir = "uploads"
+        if os.path.exists(uploads_dir):
+            for existing_file in os.listdir(uploads_dir):
+                existing_file_path = os.path.join(uploads_dir, existing_file)
+                if os.path.isfile(existing_file_path):
+                    os.remove(existing_file_path)
 
         # save file
         with open(file_path, "wb") as buffer:
@@ -102,7 +106,7 @@ async def upload_file(file: UploadFile):
         return {
             "message": f"File uploaded successfully",
             "file": {
-                "name": unique_filename,
+                "name": file.filename,
                 "original_name": file.filename,
                 "size": len(content),
             }
@@ -120,7 +124,7 @@ async def upload_file(file: UploadFile):
 @app.delete("/api/files/{file_name}")
 async def delete_file(file_name: str):
     """
-    Delete a file
+    Delete a file (kept for compatibility but not needed in single-file mode)
     """
     try:
         file_path = os.path.join("uploads", file_name)

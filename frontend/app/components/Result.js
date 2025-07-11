@@ -9,7 +9,6 @@ export default function Result() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
-    const [deletingFiles, setDeletingFiles] = useState(new Set());
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
@@ -87,58 +86,7 @@ export default function Result() {
         return new Date(dateString).toLocaleDateString();
     };
 
-    const handleDeleteFile = async (fileName) => {
-        // Enhanced confirmation dialog
-        const isConfirmed = window.confirm(
-            `Are you sure you want to delete "${fileName}"?\n\nThis action cannot be undone.`
-        );
-        
-        if (!isConfirmed) {
-            return;
-        }
-        
-        setDeletingFiles(prev => new Set(prev).add(fileName));
-        setError("");
-        
-        try {
-            // Connect to FastAPI backend instead of Next.js API
-            const response = await fetch(`http://localhost:8000/api/files/${encodeURIComponent(fileName)}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-            
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            // Refresh the file list
-            await fetchUploadedFiles();
-            
-            // Show success message
-            setSuccessMessage(`File "${fileName}" deleted successfully!`);
-            setTimeout(() => setSuccessMessage(""), 3000);
-            
-            // Clear selected file if it was the deleted one
-            if (selectedFile === fileName) {
-                setSelectedFile(null);
-                setCsvData("");
-            }
-            
-        } catch (err) {
-            console.error('Delete error:', err);
-            setError(`Failed to delete file: ${err.message}`);
-            setTimeout(() => setError(""), 5000);
-        } finally {
-            setDeletingFiles(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(fileName);
-                return newSet;
-            });
-        }
-    };
+
 
     const extractData = async (fileName) => {
         setIsLoading(true);
@@ -155,14 +103,20 @@ export default function Result() {
 
             if (response.ok) {
                 const result = await response.json();
-                console.log("Data Response:", result.result);
+                console.log("Extraction Result:", result);
+                setSuccessMessage("Data extracted successfully!");
+                setTimeout(() => setSuccessMessage(""), 3000);
             } else {
-                console.error("Data Error:", response.status);
-                alert("Error connecting to API");
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
             }
 
         } catch (error) {
             console.error('Extract error:', error);
+            setError(`Failed to extract data: ${error.message}`);
+            setTimeout(() => setError(""), 5000);
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -184,7 +138,7 @@ export default function Result() {
             <h2 className="text-xl font-bold text-center">Results</h2>
             {/* File Container */}
             <div className="space-y-2">
-                <h3 className="text-lg font-semibold">Uploaded Files</h3>
+                <h3 className="text-lg font-semibold">Current File</h3>
                 {isLoading && uploadedFiles.length === 0 && (
                     <div className="text-center py-4">
                         <div className="text-gray-500">Loading files...</div>
@@ -205,19 +159,15 @@ export default function Result() {
                 
                 {uploadedFiles.length === 0 && !isLoading && (
                     <div className="text-center py-4">
-                        <p className="text-gray-500">No files uploaded yet</p>
+                        <p className="text-gray-500">No file uploaded yet</p>
                     </div>
                 )}
                 
-                {/* File List */}
+                {/* File Display */}
                 {uploadedFiles.map((file, index) => (
                     <div 
                         key={index}
-                        className={`border rounded-md transition-colors ${
-                            selectedFile === file.name 
-                                ? 'border-blue-500 bg-blue-50' 
-                                : 'border-gray-200 hover:border-gray-300'
-                        }`}
+                        className="border rounded-md transition-colors border-gray-200 hover:border-gray-300"
                     >
                         <div 
                             className="flex items-center justify-between p-3 cursor-pointer"
@@ -244,25 +194,6 @@ export default function Result() {
                                         CSV
                                     </span>
                                 )}
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteFile(file.name);
-                                    }}
-                                    disabled={deletingFiles.has(file.name)}
-                                    className={`text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-md transition-all duration-200 ${
-                                        deletingFiles.has(file.name) ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
-                                    }`}
-                                    title="Delete file"
-                                >
-                                    {deletingFiles.has(file.name) ? (
-                                        <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-                                    ) : (
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    )}
-                                </button>
                                 <svg 
                                     className={`w-4 h-4 text-gray-500 transition-transform ${
                                         selectedFile === file.name ? 'rotate-180' : ''
@@ -333,8 +264,15 @@ export default function Result() {
                     </div>
                 ))}
             </div>
-            <button className="border-2 border-zinc-100 hover:bg-zinc-200 rounded-lg p-2  mx-auto"
-                onClick={() => extractData(selectedFile)}>Extract Data</button>
+            {uploadedFiles.length > 0 && (
+                <button 
+                    className="border-2 border-zinc-100 hover:bg-zinc-200 hover:border-zinc-300 rounded-lg p-2 mx-auto transition-colors"
+                    onClick={() => extractData(uploadedFiles[0].name)}
+                    disabled={isLoading}
+                >
+                    {isLoading ? 'Extracting...' : 'Extract Data'}
+                </button>
+            )}
         </div>
     );
 }

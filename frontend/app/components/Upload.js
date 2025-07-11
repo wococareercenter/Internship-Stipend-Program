@@ -190,9 +190,7 @@ export default function Upload() {
     }
 
     return (
-        <div className="flex flex-col gap-3 border-2 border-black rounded-md p-3 w-full h-full flex-shrink-0"> 
-            <h2 className="text-xl font-bold text-center">Upload File</h2>
-
+        <div className="flex flex-col gap-3 border-2 border-black rounded-md p-3 w-full h-full flex-shrink-0 hover:bg-gray-50 cursor-pointer"> 
             
             {/* Drag & Drop Area */}
             {/* <div 
@@ -253,9 +251,13 @@ export default function Upload() {
                         fileInputRef.current.click();
                     }
                 }}
-                className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
             >
-                Choose File
+                <div className="flex flex-row items-center gap-2 justify-center">
+                    <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <h2 className="text-xl font-bold">Upload File</h2>
+                </div>
             </button>
             {/* File Info */}
             {file && (

@@ -4,7 +4,7 @@
         "columns":{
             "name": "Full Name (First & Last Name)",
             "school_year": "School Year",
-            "accepted_internship": "Have you accepted an internship for summer 2023?",
+            "accepted_internship": "Have you accepted an internship for this upcoming summer?",
             "additional_funding": "Are you receiving or going to receive funding this summer from other Wofford programs, such as Summer of Service funding from the Bonner Scholars Program or research grants?",
             "paid_internship": "Is your internship paid or unpaid?",
             "location": "What city and state is your internship located in?",
@@ -17,7 +17,7 @@
         "renamed_columns": {
             "Full Name (First & Last Name)": "name",
             "School Year": "school_year",
-            "Have you accepted an internship for summer 2023?": "accepted_internship",
+            "Have you accepted an internship for this upcoming summer?": "accepted_internship",
             "Are you receiving or going to receive funding this summer from other Wofford programs, such as Summer of Service funding from the Bonner Scholars Program or research grants?": "additional_funding",
             "Is your internship paid or unpaid?": "paid_internship",
             "What city and state is your internship located in?": "location",

@@ -8,6 +8,7 @@ export default function Result() {
     const [isLoading, setIsLoading] = useState(true);
     const [extractedData, setExtractedData] = useState(null);
     const [error, setError] = useState(null);
+    const [openStudents, setOpenStudents] = useState(new Set());
 
     // Function to format state names with spaces for display
     const formatStateName = (stateName) => {
@@ -91,6 +92,18 @@ export default function Result() {
         fetchExtractedData();
     };
 
+    const handleStudentClick = (studentId) => {
+        setOpenStudents(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(studentId)) {
+                newSet.delete(studentId);
+            } else {
+                newSet.add(studentId);
+            }
+            return newSet;
+        });
+    };
+
     if (!isMounted) {
         // console.log("Not mounted yet, returning null");
         return null;
@@ -99,10 +112,15 @@ export default function Result() {
     return (
         <div>
             <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-center">Results</h2>
+                <div className="flex flex-row justify-left items-center gap-4 p-2">
+                    <h2 className="text-xl font-bold text-center">Results</h2>
+                    {!isLoading && !error && extractedData && (
+                        <p className="text-sm">Total Students: {extractedData.total_records} </p>
+                    )}
+                </div>
                 <button 
                     onClick={handleRefresh}
-                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                    className="px-3 py-1 bg-green-100 rounded hover:bg-green-200 text-sm"
                 >
                     Refresh
                 </button>
@@ -110,9 +128,12 @@ export default function Result() {
             
             <div className="space-y-2">
                 {isLoading && (
-                    <div className="flex flex-col items-center justify-center h-full">
-                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
-                        <p className="mt-2">Loading...</p>
+                    <div className="flex flex-wrap gap-4 w-full p-5">   
+                        {Array.from({ length: 10 }).map((_, index) => (
+                            <div key={index} className="flex flex-col items-center justify-center bg-gray-100 animate-pulse rounded-md w-80 h-64">
+                                <div className="w-full h-full bg-gray-200 rounded-md p-2"></div>
+                            </div>
+                        ))}
                     </div>
                 )}
 
@@ -123,14 +144,9 @@ export default function Result() {
                 )}
                 
                 {!isLoading && !error && extractedData && (
-                    <div className="text-center flex flex-col items-center justify-center">
-                        <div className="flex flex-row justify-left items-center gap-4">
-                            <p className="text-green-600 font-semibold">Data extracted successfully!</p>
-                            <p>Total records: {extractedData.total_records}</p>
-                        </div>
-                        
+                    <div className="text-center flex flex-col items-center justify-center border-2 border-gray-300 rounded-md p-2">
                         {/* Student Data */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto max-h-100 border-2 border-gray-300 rounded-md p-2">
+                        <div className="flex flex-wrap gap-4 overflow-y-auto max-h-[calc(100vh/1.5)] border-2 border-gray-300 rounded-md p-2">
                             {extractedData.data.map((item, index) => {
                                 // Check for invalid elements using warnings from backend
                                 const getInvalidFields = () => {
@@ -161,18 +177,21 @@ export default function Result() {
                                 };
                                 
                                 const invalidFields = getInvalidFields();
+                                const isOpen = openStudents.has(index);
                                 
                                 return (
                                     <div 
                                         key={index} 
-                                        className={`flex flex-col justify-left items-start border p-2 m-2 rounded bg-white gap-1 ${
-                                            invalidFields.length > 0 
-                                                ? 'border-red-200 border-2' 
-                                                : 'border-gray-200'
-                                        }`}
+                                        className={`flex flex-col justify-left items-start p-2 m-2 rounded bg-white gap-1 shadow-md cursor-pointer hover:bg-gray-50 min-w-80 ${isOpen ? 'w-full max-w-md' : 'w-80'}`}
+                                        onClick={() => handleStudentClick(index)}
                                     >
-                                        <h3 className="text-lg font-bold"><span className={invalidFields.includes('name') ? 'bg-red-200 px-1 rounded' : ''}>{item.name || 'N/A'}</span></h3>
-                                        <div className="flex flex-row justify-left rounded-md items-start gap-1 w-full">
+                                        <div className="flex flex-row justify-between items-center w-full">
+                                            <h3 className="text-lg font-bold"><span className={invalidFields.includes('name') ? 'bg-red-200 px-1 rounded' : ''}>{item.name || 'N/A'}</span></h3>
+                                            <span className={`text-lg font-bold px-2 py-1 rounded ${item.score > 14 ? 'bg-green-100' : 'bg-red-100'}`}>
+                                                {item.score}
+                                            </span>
+                                        </div>
+                                        <div className={`flex flex-row justify-left rounded-md items-start gap-1 w-full ${isOpen ? 'flex' : 'hidden'}`}>
                                             <div className="flex flex-col justify-left gap-2 items-start text-sm rounded-md p-2">
                                                 <h2 className="text-[16px] font-bold  ">Eligibility</h2>
                                                 <p>School Year: <span className={`font-semibold ${invalidFields.includes('school_year') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.school_year || 'N/A'}</span></p>
@@ -228,11 +247,15 @@ export default function Result() {
                         </div>
 
                         {extractedData.warnings && extractedData.warnings.length > 0 && (
-                            <div className="mt-2">
-                                <p className="text-yellow-600 font-semibold">Sorry Jenn, I'm not sure what to do with these values so I can't add them to the score:</p>
-                                <ul className="text-sm text-red-600">
+                            <div className="mt-2 text-left mx-auto w-full">
+                                <p className="text-yellow-600 font-semibold">
+                                    Sorry Jenn, I'm not sure what to do with these values so 
+                                    I can't add them to the score. But don't worry, 
+                                    I'll highlight them so you can check them out:
+                                </p>
+                                <ul className="text-sm list-disc list-inside">
                                     {extractedData.warnings.map((warning, index) => (
-                                        <li key={index}>{warning}</li>
+                                        <li key={index}>{warning.split(':')[0].trim()}: <span className="text-red-600">{warning.split(':')[1].trim()}</span></li>
                                     ))}
                                 </ul>
                             </div>

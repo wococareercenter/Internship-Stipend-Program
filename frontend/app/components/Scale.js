@@ -330,9 +330,9 @@ export default function Scale() {
 
     return (
         <div className="flex flex-col gap-4 justify-center w-full h-full relative scale-dropdown">
-            <div className="flex flex-row gap-4 border-2 border-black rounded-md p-5 w-full h-full"> 
+            <div className="flex flex-row gap-4 border-2 border-black rounded-md p-2 w-full h-full"> 
                 <button className="hover:text-zinc-500 flex items-center justify-between w-full" type="button" onClick={() => setShowScale(!showScale)}>
-                    <h2 className="text-2xl font-bold">Set Your Scale</h2>
+                    <h2 className="text-xl font-bold">Set Your Scale</h2>
                     <svg 
                         className={`w-6 h-6 transition-transform ${showScale ? 'rotate-180' : ''}`} 
                         fill="none" 

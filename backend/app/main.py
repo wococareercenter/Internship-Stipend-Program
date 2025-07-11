@@ -162,8 +162,28 @@ def process_data(file_name: str):
         columns = csv_format["columns"]
         renamed_columns = csv_format["renamed_columns"]
 
-        # Load the CSV file and rename the columns
-        df = pd.read_csv(f"uploads/{file_name}").loc[:, columns.values()].rename(columns=renamed_columns)
+        # Load the CSV file first to see what columns exist
+        df = pd.read_csv(f"uploads/{file_name}")
+        
+        # Clean column names (strip whitespace and convert to lowercase)
+        df.columns = df.columns.str.strip().str.lower()
+            
+        # Clean expected column names from config
+        expected_columns = [col.strip().lower() for col in columns.values()]
+
+        ### DEBUG ###
+        print(f"Available columns in CSV: {list(df.columns)}")
+        print("--------------------------------")
+        print(f"Expected columns from config: {expected_columns}")
+
+        # Check which columns are missing
+        missing_columns = [col for col in expected_columns if col not in df.columns]
+        if missing_columns:
+            print(f"Missing columns: {missing_columns}")
+            raise HTTPException(status_code=400, detail=f"CSV file is missing required columns: {missing_columns}")
+        
+        # Select only the columns we want and rename them
+        df = df.loc[:, expected_columns].rename(columns=renamed_columns)
 
         # Validate the data
         warnings = []
@@ -177,8 +197,17 @@ def process_data(file_name: str):
                 if len(invalid_values) > 0:
                     warnings.append(f'Invalid {field} values: {list(invalid_values)}')
 
+        # Convert DataFrame to records, handling NaN values
+        records = df.to_dict("records")
+        
+        # Replace NaN values with None for JSON serialization
+        for record in records:
+            for key, value in record.items():
+                if pd.isna(value):
+                    record[key] = None
+        
         return {
-            "data": df.to_dict("records"),
+            "data": records,
             "warnings": warnings,
             "total_records": len(df),
             "columns": list(df.columns)
@@ -187,6 +216,9 @@ def process_data(file_name: str):
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="File not found")
     except Exception as e:
+        print(f"Error in process_data: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to process file: {str(e)}")
 
 

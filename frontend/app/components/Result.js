@@ -159,17 +159,17 @@ export default function Result() {
                                         }`}
                                     >
                                         <h3 className="text-lg font-bold"><span className={invalidFields.includes('name') ? 'bg-red-200 px-1 rounded' : ''}>{item.name || 'N/A'}</span></h3>
-                                        <div className="flex flex-row justify-between border-2 border-gray-300 rounded-md p-2 items-start gap-1 w-full">
-                                            <div className="flex flex-col justify-left items-start gap-1 border-2 border-gray-300 rounded-md p-2 w-1/2">
-                                                <h2 className="text-md font-bold ">Eligibility</h2>
-                                                <p>School Year: <span className={invalidFields.includes('school_year') ? 'bg-red-200 px-1 rounded' : ''}>{item.school_year || 'N/A'}</span></p>
-                                                <p>Accepted Internship: <span className={invalidFields.includes('accepted_internship') ? 'bg-red-200 px-1 rounded' : ''}>{item.accepted_internship || 'N/A'}</span></p>
-                                                <p>Additional Funding: <span className={invalidFields.includes('additional_funding') ? 'bg-red-200 px-1 rounded' : ''}>{item.additional_funding || 'N/A'}</span></p>
-                                                <p>Internship Length: <span>{`${Math.ceil((new Date(item.end_date) - new Date(item.start_date)) / (1000 * 60 * 60 * 24 * 7))} weeks`}</span></p>
-                                                <p>Hours: <span className={invalidFields.includes('hours') ? 'bg-red-200 px-1 rounded' : ''}>{item.hours || 'N/A'}</span></p>
+                                        <div className="flex flex-row justify-left rounded-md items-start gap-1 w-full">
+                                            <div className="flex flex-col justify-left gap-2 items-start text-sm rounded-md p-2">
+                                                <h2 className="text-[16px] font-bold  ">Eligibility</h2>
+                                                <p>School Year: <span className={`font-semibold ${invalidFields.includes('school_year') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.school_year || 'N/A'}</span></p>
+                                                <p>Accepted Internship: <span className={`font-semibold ${invalidFields.includes('accepted_internship') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.accepted_internship || 'N/A'}</span></p>
+                                                <p>Additional Funding: <span className={`font-semibold ${invalidFields.includes('additional_funding') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.additional_funding || 'N/A'}</span></p>
+                                                <p>Internship Length: <span className={`font-semibold ${invalidFields.includes('internship_length') ? 'bg-red-200 px-1 rounded' : ''}`}>{`${Math.ceil((new Date(item.end_date) - new Date(item.start_date)) / (1000 * 60 * 60 * 24 * 7))} weeks`}</span></p>
+                                                <p>Hours: <span className={`font-semibold ${invalidFields.includes('hours') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.hours || 'N/A'}</span></p>
                                             </div>
-                                            <div className="flex flex-col justify-left items-start gap-1 border-2 border-gray-300 rounded-md p-2 w-1/2 ">
-                                                <h2 className="text-md font-bold ">Scores</h2>
+                                            <div className="flex flex-col justify-left items-start rounded-md p-2 w-1/2 ">
+                                                <h2 className="text-[16px] font-bold ">Scores</h2>
                                                 <table className="w-full border-collapse">
                                                     <tbody>
                                                         {/* Location */}
@@ -200,8 +200,10 @@ export default function Result() {
                                                             </td>
                                                             <td className="text-sm text-right py-1">50</td>
                                                         </tr>
-                                                        
-                                                        
+                                                        <tr className="font-bold">
+                                                            <td className="text-sm text-left border-r">Total</td>
+                                                            <td className="text-sm text-right py-1">100</td>
+                                                        </tr>
                                                     </tbody>
                                                 </table>
                                             </div>

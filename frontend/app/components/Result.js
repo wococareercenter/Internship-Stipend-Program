@@ -139,7 +139,11 @@ export default function Result() {
                                 return (
                                     <div 
                                         key={index} 
-                                        className="border p-2 m-2 rounded bg-white border-gray-200"
+                                        className={`border p-2 m-2 rounded bg-white ${
+                                            invalidFields.length > 0 
+                                                ? 'border-red-500 border-2' 
+                                                : 'border-gray-200'
+                                        }`}
                                     >
                                         <p><strong>Name:</strong> <span className={invalidFields.includes('name') ? 'bg-red-200 px-1 rounded' : ''}>{item.name || 'N/A'}</span></p>
                                         <p><strong>School Year:</strong> <span className={invalidFields.includes('school_year') ? 'bg-red-200 px-1 rounded' : ''}>{item.school_year || 'N/A'}</span></p>

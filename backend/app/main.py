@@ -203,10 +203,21 @@ def process_data(file_name: str):
                 # Ensure valid_values is a list
                 if isinstance(valid_values, str):
                     valid_values = [valid_values]
-                invalid_values = df[~df[field].isin(valid_values)][field].unique()
+                
+                # Clean the data values (strip whitespace and handle NaN)
+                cleaned_values = df[field].astype(str).str.strip()
+                # Filter out NaN values for comparison
+                non_null_mask = ~df[field].isna()
+                cleaned_values = cleaned_values[non_null_mask]
+                
+                # Find invalid values by comparing cleaned values
+                invalid_values = []
+                for value in cleaned_values.unique():
+                    if value not in valid_values:
+                        invalid_values.append(value)
                 
                 if len(invalid_values) > 0:
-                    warnings.append(f'Invalid {field} values: {list(invalid_values)}')
+                    warnings.append(f'Invalid {field} values: {invalid_values}')
 
         # Convert DataFrame to records, handling NaN values
         records = df.to_dict("records")

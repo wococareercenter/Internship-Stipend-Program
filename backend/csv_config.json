@@ -27,7 +27,7 @@
         },
         "validations": {
             "school_year": {
-                "valid_values": ["Freshman", "Sophomore", "Junior", "Senior", "Senior (Graduateing in December 2025)"],
+                "valid_values": ["Freshman", "Sophomore", "Junior", "Senior", "Senior - Graduating Dec 2025"],
                 "required": true 
             },
             "accepted_internship": {

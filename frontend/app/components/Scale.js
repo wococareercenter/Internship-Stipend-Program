@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useScale } from "../context/ScaleContext";
 
 export default function Scale() {
     // Dropdown Variables
@@ -205,6 +206,8 @@ export default function Scale() {
         }
     }
 
+    const { updateScale } = useScale();
+
     // Submit Function
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -228,6 +231,9 @@ export default function Scale() {
         };
 
         console.log({scale: currentScale});
+
+        // Update the context
+        updateScale(currentScale);
 
         try {
             const response = await fetch("http://localhost:8000/api/scale", {

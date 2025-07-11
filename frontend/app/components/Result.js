@@ -1,7 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useScale } from "../context/ScaleContext";
 
 export default function Result() {
+    const { scale } = useScale();
     const [isMounted, setIsMounted] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [extractedData, setExtractedData] = useState(null);
@@ -53,7 +55,8 @@ export default function Result() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    file_name: fileData.file.name
+                    file_name: fileData.file.name,
+                    scale: scale
                 })
             });
             
@@ -177,32 +180,32 @@ export default function Result() {
                                                             <td className="text-sm text-left border-r">
                                                                 <span className={invalidFields.includes('location') ? 'bg-red-200 px-1 rounded' : ''}>{item.location || 'N/A'}</span>
                                                             </td>
-                                                            <td className="text-sm text-right py-1">50</td>
+                                                                                                                         <td className="text-sm text-right py-1">{item.score_breakdown.location !== undefined ? item.score_breakdown.location : 'N/A'}</td>
                                                         </tr>
                                                         {/* Need Level */}
                                                         <tr className="border-b">
                                                             <td className="text-sm text-left border-r">
                                                                 <span className={invalidFields.includes('need_level') ? 'bg-red-200 px-1 rounded' : ''}>{item.need_level || 'N/A'}</span>
                                                             </td>
-                                                            <td className="text-sm text-right py-1">50</td>
+                                                                                                                         <td className="text-sm text-right py-1">{item.score_breakdown.need_level !== undefined ? item.score_breakdown.need_level : 'N/A'}</td>
                                                         </tr>
                                                         {/* Internship Type */}
                                                         <tr className="border-b">
                                                             <td className="text-sm text-left border-r">
                                                                 <span className={invalidFields.includes('internship_type') ? 'bg-red-200 px-1 rounded' : ''}>{item.internship_type || 'N/A'}</span>
                                                             </td>
-                                                            <td className="text-sm text-right py-1">50</td>
+                                                                                                                         <td className="text-sm text-right py-1">{item.score_breakdown.internship_type !== undefined ? item.score_breakdown.internship_type : 'N/A'}</td>
                                                         </tr>
                                                         {/* Paid Internship */}
                                                         <tr className="border-b">
                                                             <td className="text-sm text-left border-r">
                                                                 <span className={invalidFields.includes('paid_internship') ? 'bg-red-200 px-1 rounded' : ''}>{item.paid_internship || 'N/A'}</span>
                                                             </td>
-                                                            <td className="text-sm text-right py-1">50</td>
+                                                                                                                         <td className="text-sm text-right py-1">{item.score_breakdown.paid_internship !== undefined ? item.score_breakdown.paid_internship : 'N/A'}</td>
                                                         </tr>
                                                         <tr className="font-bold">
                                                             <td className="text-sm text-left border-r">Total</td>
-                                                            <td className="text-sm text-right py-1">100</td>
+                                                                                                                         <td className="text-sm text-right py-1">{item.score !== undefined ? item.score : 'N/A'}</td>
                                                         </tr>
                                                     </tbody>
                                                 </table>

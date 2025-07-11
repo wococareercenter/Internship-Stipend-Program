@@ -135,8 +135,6 @@ async def upload_file(file: UploadFile):
         )
 
 
-
-
 ### Extract Data ENDPOINT ###
 def load_csv_config():
     """
@@ -150,8 +148,12 @@ def load_csv_config():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to load CSV config: {str(e)}")
 
+class ExtractData(BaseModel):
+    file_name: str
+    scale: dict
+
 # Process Data
-def process_data(file_name: str):
+def process_data(file_name: str, scale: dict = None):
     """
     Process the data from the CSV file
     """
@@ -159,6 +161,10 @@ def process_data(file_name: str):
         # Load the CSV config
         config = load_csv_config()
         csv_format = config["csv_format_2025"]
+        default_scale = config["default_scale"] # default scale for the data
+        if scale is None:
+            scale = default_scale
+
         columns = csv_format["columns"]
         renamed_columns = csv_format["renamed_columns"]
 
@@ -223,17 +229,71 @@ def process_data(file_name: str):
         # Convert DataFrame to records, handling NaN values
         records = df.to_dict("records")
         
-        # Replace NaN values with None for JSON serialization
+        # Calculate scores for each record
         for record in records:
+            # Replace NaN values with None for JSON serialization
             for key, value in record.items():
                 if pd.isna(value):
                     record[key] = None
-        
+
+            # Calculate scores for this student
+            score = 0
+            score_breakdown = {}
+
+            # Need Level scoring with mapping
+            if record.get('need_level'):
+                need_level = record['need_level'].lower().replace(' ', '')
+                # Map the CSV values to scale keys
+                need_mapping = {
+                    'veryhighneed': 'veryHighNeed',
+                    'highneed': 'highNeed', 
+                    'moderateneed': 'moderateNeed',
+                    'lowneed': 'lowNeed',
+                    'noneed': 'noNeed'
+                }
+                scale_key = need_mapping.get(need_level, need_level)
+                need_scores = scale['fafsaScale']
+                need_score = need_scores.get(scale_key, 0)
+                
+
+                
+                score_breakdown['need_level'] = need_score
+                score += need_score
+            
+            # Paid/Unpaid scoring
+            if record.get('paid_internship'):
+                paid_status = record['paid_internship'].lower()
+                paid_scores = scale['paid']
+                paid_score = paid_scores.get(paid_status, 0)
+                score_breakdown['paid_internship'] = paid_score
+                score += paid_score
+            
+            # Internship Type scoring with mapping
+            if record.get('internship_type'):
+                internship_type = record['internship_type'].lower().replace('-', '')
+                # Map the CSV values to scale keys
+                type_mapping = {
+                    'inperson': 'inPerson',
+                    'hybrid': 'hybrid',
+                    'virtual': 'virtual'
+                }
+                scale_key = type_mapping.get(internship_type, internship_type)
+                type_scores = scale['internshipType']
+                type_score = type_scores.get(scale_key, 0)
+                score_breakdown['internship_type'] = type_score
+                score += type_score
+
+            # Location scoring
+            # comeback to this -> need to clean the location column
+
+            record['score'] = score
+            record['score_breakdown'] = score_breakdown
+
         return {
             "data": records,
             "warnings": warnings,
             "total_records": len(df),
-            "columns": list(df.columns)
+            "columns": list(df.columns),
         }
     
     except FileNotFoundError:
@@ -244,8 +304,13 @@ def process_data(file_name: str):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to process file: {str(e)}")
 
-class ExtractData(BaseModel):
-    file_name: str
+
+
+class CalculateScores(BaseModel):
+    scale: dict
+    data: dict
+
+
 
 # Final Extract and Send Data to Frontend
 @app.post("/api/extract")
@@ -254,7 +319,7 @@ async def extract_data_endpoint(data: ExtractData):
     Extract data from a CSV file
     """
     try:
-        result = process_data(data.file_name)
+        result = process_data(data.file_name, data.scale)
         return result
     except HTTPException:
         raise

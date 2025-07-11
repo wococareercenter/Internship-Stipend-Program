@@ -165,11 +165,11 @@ def process_data(file_name: str):
         # Load the CSV file first to see what columns exist
         df = pd.read_csv(f"uploads/{file_name}")
         
-        # Clean column names (strip whitespace and convert to lowercase)
+        # Clean column names and renamed columns (strip whitespace and convert to lowercase)
         df.columns = df.columns.str.strip().str.lower()
-            
-        # Clean expected column names from config
         expected_columns = [col.strip().lower() for col in columns.values()]
+        
+       
 
         ### DEBUG ###
         print(f"Available columns in CSV: {list(df.columns)}")
@@ -182,8 +182,13 @@ def process_data(file_name: str):
             print(f"Missing columns: {missing_columns}")
             raise HTTPException(status_code=400, detail=f"CSV file is missing required columns: {missing_columns}")
         
+        # Create a mapping from lowercase column names to renamed columns
+        column_mapping = {}
+        for original_col, renamed_col in renamed_columns.items():
+            column_mapping[original_col.strip().lower()] = renamed_col
+        
         # Select only the columns we want and rename them
-        df = df.loc[:, expected_columns].rename(columns=renamed_columns)
+        df = df.loc[:, expected_columns].rename(columns=column_mapping)
 
         # Validate the data
         warnings = []
@@ -192,6 +197,12 @@ def process_data(file_name: str):
         for field, validation in validation_config.items():
             if field in df.columns:
                 valid_values = validation["valid_values"]
+                # Skip validation if valid_values is "any"
+                if valid_values == "any":
+                    continue
+                # Ensure valid_values is a list
+                if isinstance(valid_values, str):
+                    valid_values = [valid_values]
                 invalid_values = df[~df[field].isin(valid_values)][field].unique()
                 
                 if len(invalid_values) > 0:
@@ -221,8 +232,6 @@ def process_data(file_name: str):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to process file: {str(e)}")
 
-
-
 class ExtractData(BaseModel):
     file_name: str
 
@@ -239,6 +248,5 @@ async def extract_data_endpoint(data: ExtractData):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to extract data: {str(e)}")
-
 
 

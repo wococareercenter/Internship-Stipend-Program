@@ -119,6 +119,20 @@ export default function Scale() {
         setIsMounted(true);
     }, []);
 
+    // Handle click outside to close dropdown
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (showScale && !event.target.closest('.scale-dropdown')) {
+                setShowScale(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showScale]);
+
     // Save to session storage whenever costOfLiving changes
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -163,6 +177,34 @@ export default function Scale() {
         );
     }
 
+    // click to open  and close scale dropdown
+    const handleCategoryClick = (category) => {
+        // close all categories
+        setShowFAFSA(false);
+        setShowPaid(false);
+        setShowInternshipType(false);
+        setShowCostOfLiving(false);
+        setShowTier1(false);
+        setShowTier2(false);
+        setShowTier3(false);
+
+        //toggle the clicked category
+        switch (category) {
+            case 'fafsa':
+                setShowFAFSA(!showFAFSA);
+                break;
+            case 'paid':
+                setShowPaid(!showPaid);
+                break;
+            case 'internshipType':
+                setShowInternshipType(!showInternshipType);
+                break;
+            case 'costOfLiving':
+                setShowCostOfLiving(!showCostOfLiving);
+                break;
+        }
+    }
+
     // Submit Function
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -201,6 +243,7 @@ export default function Scale() {
                 console.log("API Response:", result.result);
                 setSuccessMessage("Scale saved successfully");
                 setTimeout(()=> setSuccessMessage(""), 3000);
+                setShowScale(false);
             } else {
                 console.error("API Error:", response.status);
                 alert("Error connecting to API");
@@ -212,280 +255,354 @@ export default function Scale() {
     }
 
     return (
-        <div className="flex flex-col gap-4 justify-center min-w-fit">
-            <div className="flex flex-col gap-4 border-2 border-black rounded-md p-5 min-w-fit"> 
-                <button className="hover:text-zinc-500" type="button" onClick={() => setShowScale(!showScale)}>
+        <div className="flex flex-col gap-4 justify-center w-full h-full relative scale-dropdown">
+            <div className="flex flex-row gap-4 border-2 border-black rounded-md p-5 w-full h-full"> 
+                <button className="hover:text-zinc-500 flex items-center justify-between w-full" type="button" onClick={() => setShowScale(!showScale)}>
                     <h2 className="text-2xl font-bold">Set Your Scale</h2>
+                    <svg 
+                        className={`w-6 h-6 transition-transform ${showScale ? 'rotate-180' : ''}`} 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
                 </button>
+                
                 {showScale && (
-                <div className="flex flex-col gap-4 border-2 border-black rounded-md p-2 mx-auto">
-                    <form className="flex flex-col gap-4 justify-center max-w-md mx-auto" onSubmit={(e) => e.preventDefault()}>
-                        {/* FAFSA */}
-                        <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowFAFSA(!showFAFSA)}>
-                            FAFSA
-                        </button>
-                        {showFAFSA && (
-                            <div className="flex flex-col justify-center gap-4 border-2 border-black rounded-md p-2 mx-auto">
-                                <div className="flex flex-row gap-4 justify-between items-center">
-                                    <label htmlFor="Very High Need (VHN"> Very High Need (VHN)</label>
-                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5" 
-                                        value={fafsaScale.veryHighNeed} 
-                                        onChange={(e) => setFafsaScale({
-                                            ...fafsaScale, // Default value
-                                            veryHighNeed: parseInt(e.target.value) || 0 // New value
-                                        })} 
-                                    />
-                                </div>
-                                <hr className="border-2 border-black w-full h-px" />
-                                <div className="flex flex-row gap-4 justify-between items-center">
-                                    <label htmlFor="FAFSA">High Need (HN)</label>
-                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" 
-                                        value={fafsaScale.highNeed} 
-                                        onChange={(e) => setFafsaScale({
-                                            ...fafsaScale, // Default value
-                                            highNeed: parseInt(e.target.value) || 0 // New value
-                                        })} 
-                                    />
-                                </div>
-                                <hr className="border-2 border-black w-full" />
-                                <div className="flex flex-row gap-4 justify-between items-center">
-                                    <label htmlFor="FAFSA">Moderate Need (MH)</label>
-                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="3" min="0" max="5" 
-                                        value={fafsaScale.moderateNeed} 
-                                        onChange={(e) => setFafsaScale({
-                                            ...fafsaScale, // Default value
-                                            moderateNeed: parseInt(e.target.value) || 0 // New value
-                                        })} 
-                                    />
-                                </div>
-                                <hr className="border-2 border-black w-full" />
-                                <div className="flex flex-row gap-4 justify-between items-center">
-                                    <label htmlFor="FAFSA">Low Need (LN)</label>
-                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="2" min="0" max="5" 
-                                        value={fafsaScale.lowNeed} 
-                                        onChange={(e) => setFafsaScale({
-                                            ...fafsaScale, // Default value
-                                            lowNeed: parseInt(e.target.value) || 0 // New value
-                                        })} 
-                                    />
-                                </div>
-                                <hr className="border-2 border-black w-full" />
-                                <div className="flex flex-row gap-4 justify-between items-center">
-                                    <label htmlFor="FAFSA">No Need (LN)</label>
-                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="0" min="0" max="5" 
-                                        value={fafsaScale.noNeed} 
-                                        onChange={(e) => setFafsaScale({
-                                            ...fafsaScale, // Default value
-                                            noNeed: parseInt(e.target.value) || 0 // New value
-                                        })} 
-                                    />
-                                </div>
-
+                    <div className="absolute top-full left-0 right-0 -translate-x-1/3 z-50 min-w-170 rounded-md bg-white border-2 border-black p-4 shadow-lg">
+                        <form className="flex flex-col gap-4 justify-center" onSubmit={(e) => e.preventDefault()}>
+                            <div className="flex flex-row gap-4 justify-center">
+                                {/* FAFSA */}
+                                <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2 flex items-center justify-between" type="button" onClick={() => handleCategoryClick('fafsa')}>
+                                    <span>FAFSA</span>
+                                    <svg 
+                                        className={`w-4 h-4 transition-transform ${showFAFSA ? 'rotate-180' : ''}`} 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                
+                                {/* Paid or Unpaid */}
+                                <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2 flex items-center justify-between" type="button" onClick={() => handleCategoryClick('paid')}>
+                                    <span>Paid or Unpaid</span>
+                                    <svg 
+                                        className={`w-4 h-4 transition-transform ${showPaid ? 'rotate-180' : ''}`} 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                
+                                {/* In-Person or Remote */}
+                                <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2 flex items-center justify-between" type="button" onClick={() => handleCategoryClick('internshipType')}>
+                                    <span>In-Person or Remote</span>
+                                    <svg 
+                                        className={`w-4 h-4 transition-transform ${showInternshipType ? 'rotate-180' : ''}`} 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                
+                                {/* Cost of Living */}
+                                <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2 flex items-center justify-between" type="button" onClick={() => handleCategoryClick('costOfLiving')}>
+                                    <span>Cost of Living</span>
+                                    <svg 
+                                        className={`w-4 h-4 transition-transform ${showCostOfLiving ? 'rotate-180' : ''}`} 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
                             </div>
-                        )}
-                        
-                        {/* Paid or Unpaid */}
-                        <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowPaid(!showPaid)}>
-                            Paid or Unpaid
-                        </button>
-                        {showPaid && (
-                            <div className="flex flex-col justify-center gap-4 border-2 border-black rounded-md p-2 mx-auto">
-                                <div className="flex flex-row gap-4 justify-between items-center">
-                                    <label htmlFor="Paid?">Paid</label>
-                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5"
-                                        value={paid.paid}
-                                        onChange={(e) => setPaid({
-                                            ...paid, // Default value
-                                            paid: parseInt(e.target.value) || 0 // New value
-                                        })} 
-                                    />
+                            
+                            {/* FAFSA Details */}
+                            {showFAFSA && (
+                                <div className="flex flex-col justify-center gap-4 border-2 border-black rounded-md p-2 mx-auto">
+                                    <div className="flex flex-row gap-4 justify-between items-center">
+                                        <label htmlFor="Very High Need (VHN"> Very High Need (VHN)</label>
+                                        <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5" 
+                                            value={fafsaScale.veryHighNeed} 
+                                            onChange={(e) => setFafsaScale({
+                                                ...fafsaScale, // Default value
+                                                veryHighNeed: parseInt(e.target.value) || 0 // New value
+                                            })} 
+                                        />
+                                    </div>
+                                    <hr className="border-2 border-black w-full h-px" />
+                                    <div className="flex flex-row gap-4 justify-between items-center">
+                                        <label htmlFor="FAFSA">High Need (HN)</label>
+                                        <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" 
+                                            value={fafsaScale.highNeed} 
+                                            onChange={(e) => setFafsaScale({
+                                                ...fafsaScale, // Default value
+                                                highNeed: parseInt(e.target.value) || 0 // New value
+                                            })} 
+                                        />
+                                    </div>
+                                    <hr className="border-2 border-black w-full" />
+                                    <div className="flex flex-row gap-4 justify-between items-center">
+                                        <label htmlFor="FAFSA">Moderate Need (MH)</label>
+                                        <input className="border-2 border-black rounded-md p-2" type="number" placeholder="3" min="0" max="5" 
+                                            value={fafsaScale.moderateNeed} 
+                                            onChange={(e) => setFafsaScale({
+                                                ...fafsaScale, // Default value
+                                                moderateNeed: parseInt(e.target.value) || 0 // New value
+                                            })} 
+                                        />
+                                    </div>
+                                    <hr className="border-2 border-black w-full" />
+                                    <div className="flex flex-row gap-4 justify-between items-center">
+                                        <label htmlFor="FAFSA">Low Need (LN)</label>
+                                        <input className="border-2 border-black rounded-md p-2" type="number" placeholder="2" min="0" max="5" 
+                                            value={fafsaScale.lowNeed} 
+                                            onChange={(e) => setFafsaScale({
+                                                ...fafsaScale, // Default value
+                                                lowNeed: parseInt(e.target.value) || 0 // New value
+                                            })} 
+                                        />
+                                    </div>
+                                    <hr className="border-2 border-black w-full" />
+                                    <div className="flex flex-row gap-4 justify-between items-center">
+                                        <label htmlFor="FAFSA">No Need (LN)</label>
+                                        <input className="border-2 border-black rounded-md p-2" type="number" placeholder="0" min="0" max="5" 
+                                            value={fafsaScale.noNeed} 
+                                            onChange={(e) => setFafsaScale({
+                                                ...fafsaScale, // Default value
+                                                noNeed: parseInt(e.target.value) || 0 // New value
+                                            })} 
+                                        />
+                                    </div>
                                 </div>
-                                <hr className="border-2 border-black w-full h-px" />
-                                <div className="flex flex-row gap-4 justify-between items-center">
-                                    <label htmlFor="Paid?">Unpaid</label>
-                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5"
-                                        value={paid.unpaid}
-                                        onChange={(e) => setPaid({
-                                            ...paid, // Default value
-                                            unpaid: parseInt(e.target.value) || 0  // New value
-                                        })} 
-                                    />
+                            )}
+                            
+                            {/* Paid/Unpaid Details */}
+                            {showPaid && (
+                                <div className="flex flex-col justify-center gap-4 border-2 border-black rounded-md p-2 mx-auto">
+                                    <div className="flex flex-row gap-4 justify-between items-center">
+                                        <label htmlFor="Paid?">Paid</label>
+                                        <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5"
+                                            value={paid.paid}
+                                            onChange={(e) => setPaid({
+                                                ...paid, // Default value
+                                                paid: parseInt(e.target.value) || 0 // New value
+                                            })} 
+                                        />
+                                    </div>
+                                    <hr className="border-2 border-black w-full h-px" />
+                                    <div className="flex flex-row gap-4 justify-between items-center">
+                                        <label htmlFor="Paid?">Unpaid</label>
+                                        <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5"
+                                            value={paid.unpaid}
+                                            onChange={(e) => setPaid({
+                                                ...paid, // Default value
+                                                unpaid: parseInt(e.target.value) || 0  // New value
+                                            })} 
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                        
-                        {/* In-Person or Remote */}
-                        <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowInternshipType(!showInternshipType)}>
-                            In-Person or Remote
-                        </button>
-                        {showInternshipType && (
-                            <div className="flex flex-col justify-center gap-4 border-2 border-black rounded-md p-2 mx-auto">
-                                <div className="flex flex-row gap-4 justify-between items-center">
-                                    <label htmlFor="Internship Type">In-Person</label>
-                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5"
-                                        value={internshipType.inPerson}
-                                        onChange={(e) => setInternshipType({
-                                            ...internshipType, // Default value
-                                            inPerson: parseInt(e.target.value) || 0 // New value
-                                        })} 
-                                    />
+                            )}
+                            
+                            {/* Internship Type Details */}
+                            {showInternshipType && (
+                                <div className="flex flex-col justify-center gap-4 border-2 border-black rounded-md p-2 mx-auto">
+                                    <div className="flex flex-row gap-4 justify-between items-center">
+                                        <label htmlFor="Internship Type">In-Person</label>
+                                        <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5"
+                                            value={internshipType.inPerson}
+                                            onChange={(e) => setInternshipType({
+                                                ...internshipType, // Default value
+                                                inPerson: parseInt(e.target.value) || 0 // New value
+                                            })} 
+                                        />
+                                    </div>
+                                    <hr className="border-2 border-black w-full h-px" />
+                                    <div className="flex flex-row gap-4 justify-between items-center">
+                                        <label htmlFor="Internship Type">Hybrid</label>
+                                        <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5"
+                                            value={internshipType.hybrid}
+                                            onChange={(e) => setInternshipType({
+                                                ...internshipType, // Default value
+                                                hybrid: parseInt(e.target.value) || 0 // New value
+                                            })} 
+                                        />
+                                    </div>
+                                    <hr className="border-2 border-black w-full h-px" />
+                                    <div className="flex flex-row gap-4 justify-between items-center">
+                                        <label htmlFor="Internship Type">Virtual</label>
+                                        <input className="border-2 border-black rounded-md p-2" type="number" placeholder="0" min="0" max="5" 
+                                            value={internshipType.virtual}
+                                            onChange={(e) => setInternshipType({
+                                                ...internshipType, // Default value
+                                                virtual: parseInt(e.target.value) || 0 // New value
+                                            })} 
+                                        />
+                                    </div>
                                 </div>
-                                <hr className="border-2 border-black w-full h-px" />
-                                <div className="flex flex-row gap-4 justify-between items-center">
-                                    <label htmlFor="Internship Type">Hybrid</label>
-                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5"
-                                        value={internshipType.hybrid}
-                                        onChange={(e) => setInternshipType({
-                                            ...internshipType, // Default value
-                                            hybrid: parseInt(e.target.value) || 0 // New value
-                                        })} 
-                                    />
-                                </div>
-                                <hr className="border-2 border-black w-full h-px" />
-                                <div className="flex flex-row gap-4 justify-between items-center">
-                                    <label htmlFor="Internship Type">Virtual</label>
-                                    <input className="border-2 border-black rounded-md p-2" type="number" placeholder="0" min="0" max="5" 
-                                        value={internshipType.virtual}
-                                        onChange={(e) => setInternshipType({
-                                            ...internshipType, // Default value
-                                            virtual: parseInt(e.target.value) || 0 // New value
-                                        })} 
-                                    />
-                                </div>
-                            </div>
-                        )}
-                        
-                        {/* Cost of Living */}
-                        <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowCostOfLiving(!showCostOfLiving)}>
-                            Cost of Living
-                        </button>
-                        {showCostOfLiving && (
-                            <div className="flex flex-row gap-4">
-                                {/* Tier 1 */}
-                                {!isTierEmpty('tier1') && (
-                                    <div className="flex flex-col gap-4">
-                                        <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowTier1(!showTier1)}>
-                                            Tier 1
-                                        </button>
-                                        {showTier1 && (
+                            )}
+                            
+                            {/* Cost of Living Details */}
+                            {showCostOfLiving && (
+                                <div className="flex flex-row gap-4 mx-auto">
+                                    {/* Tier 1 */}
+                                    {!isTierEmpty('tier1') && (
                                         <div className="flex flex-col gap-4">
-                                            <div className="overflow-y-auto max-h-72">
-                                                {Object.keys(costOfLiving.tier1).map((state) => (
-                                                    <div key={state} className="flex flex-row gap-4 justify-between items-center h-10">
-                                                        <label htmlFor="Cost of Living">{state}</label>
-                                                        {showCostOfLivingInput && (
-                                                            <select 
-                                                                className="border-2 border-black rounded-md p-2" 
-                                                                value={1}
-                                                                onChange={(e) => {
-                                                                    e.preventDefault();
-                                                                    moveStateToTier(state, parseInt(e.target.value));
-                                                                }}
-                                                            >
-                                                                <option value={1}>Tier 1</option>
-                                                                <option value={2}>Tier 2</option>
-                                                                <option value={3}>Tier 3</option>
-                                                            </select>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" 
-                                                onClick={() => setShowCostOfLivingInput(!showCostOfLivingInput)}>
+                                            <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2 flex items-center justify-between" type="button" onClick={() => setShowTier1(!showTier1)}>
+                                                <span>Tier 1</span>
+                                                <svg 
+                                                    className={`w-4 h-4 transition-transform ${showTier1 ? 'rotate-180' : ''}`} 
+                                                    fill="none" 
+                                                    stroke="currentColor" 
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+                                            {showTier1 && (
+                                            <div className="flex flex-col gap-4">
+                                                <div className="overflow-y-auto max-h-72">
+                                                    {Object.keys(costOfLiving.tier1).map((state) => (
+                                                        <div key={state} className="flex flex-row gap-4 justify-between items-center h-10">
+                                                            <label htmlFor="Cost of Living">{state}</label>
+                                                            {showCostOfLivingInput && (
+                                                                <select 
+                                                                    className="border-2 border-black rounded-md p-2" 
+                                                                    value={1}
+                                                                    onChange={(e) => {
+                                                                        e.preventDefault();
+                                                                        moveStateToTier(state, parseInt(e.target.value));
+                                                                    }}
+                                                                >
+                                                                    <option value={1}>Tier 1</option>
+                                                                    <option value={2}>Tier 2</option>
+                                                                    <option value={3}>Tier 3</option>
+                                                                </select>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" 
+                                                    onClick={() => setShowCostOfLivingInput(!showCostOfLivingInput)}>
                                                     {showCostOfLivingInput ? "Save Tier 1" : "Edit Tier 1"}
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                                )}
-
-                                {/* Tier 2 */}
-                                {!isTierEmpty('tier2') && (
-                                    <div className="flex flex-col gap-4">
-                                        <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowTier2(!showTier2)}>
-                                            Tier 2
-                                        </button>
-                                    {showTier2 && (
-                                        <div className="flex flex-col gap-4">
-                                            <div className="overflow-y-auto max-h-72">
-                                                {Object.keys(costOfLiving.tier2).map((state) => (
-                                                    <div key={state} className="flex flex-row gap-4 justify-between items-center h-10">
-                                                        <label htmlFor="Cost of Living">{state}</label>
-                                                        {showCostOfLivingInput2 && (
-                                                            <select 
-                                                                className="border-2 border-black rounded-md p-2"
-                                                                value={2}
-                                                                onChange={(e) => {
-                                                                    e.preventDefault();
-                                                                    moveStateToTier(state, parseInt(e.target.value));
-                                                                }}
-                                                            >
-                                                                <option value={1}>Tier 1</option>
-                                                                <option value={2}>Tier 2</option>
-                                                                <option value={3}>Tier 3</option>
-                                                            </select>
-                                                        )}
-                                                    </div>
-                                                ))}
+                                                </button>
                                             </div>
-                                            <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2"
-                                                onClick={() => setShowCostOfLivingInput2(!showCostOfLivingInput2)}>
+                                        )}
+                                    </div>
+                                    )}
+
+                                    {/* Tier 2 */}
+                                    {!isTierEmpty('tier2') && (
+                                        <div className="flex flex-col gap-4">
+                                            <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2 flex items-center justify-between" type="button" onClick={() => setShowTier2(!showTier2)}>
+                                                <span>Tier 2</span>
+                                                <svg 
+                                                    className={`w-4 h-4 transition-transform ${showTier2 ? 'rotate-180' : ''}`} 
+                                                    fill="none" 
+                                                    stroke="currentColor" 
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+                                        {showTier2 && (
+                                            <div className="flex flex-col gap-4">
+                                                <div className="overflow-y-auto max-h-72">
+                                                    {Object.keys(costOfLiving.tier2).map((state) => (
+                                                        <div key={state} className="flex flex-row gap-4 justify-between items-center h-10">
+                                                            <label htmlFor="Cost of Living">{state}</label>
+                                                            {showCostOfLivingInput2 && (
+                                                                <select 
+                                                                    className="border-2 border-black rounded-md p-2"
+                                                                    value={2}
+                                                                    onChange={(e) => {
+                                                                        e.preventDefault();
+                                                                        moveStateToTier(state, parseInt(e.target.value));
+                                                                    }}
+                                                                >
+                                                                    <option value={1}>Tier 1</option>
+                                                                    <option value={2}>Tier 2</option>
+                                                                    <option value={3}>Tier 3</option>
+                                                                </select>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2"
+                                                    onClick={() => setShowCostOfLivingInput2(!showCostOfLivingInput2)}>
                                                     {showCostOfLivingInput2 ? "Save Tier 2" : "Edit Tier 2"}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                    )}
+
+                                    {/* Tier 3 */}
+                                    {!isTierEmpty('tier3') && (
+                                        <div className="flex flex-col gap-4">
+                                            <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2 flex items-center justify-between" type="button" onClick={() => setShowTier3(!showTier3)}>
+                                                <span>Tier 3</span>
+                                                <svg 
+                                                    className={`w-4 h-4 transition-transform ${showTier3 ? 'rotate-180' : ''}`} 
+                                                    fill="none" 
+                                                    stroke="currentColor" 
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                </svg>
                                             </button>
-                                        </div>
+                                        {showTier3 && (
+                                            <div className="flex flex-col gap-4">
+                                                <div className="overflow-y-auto max-h-72">
+                                                    {Object.keys(costOfLiving.tier3).map((state) => (
+                                                        <div key={state} className="flex flex-row gap-4 justify-between items-center h-10">
+                                                            <label htmlFor="Cost of Living">{state}</label>
+                                                            {showCostOfLivingInput3 && (
+                                                                <select 
+                                                                    className="border-2 border-black rounded-md p-2"
+                                                                    value={3}
+                                                                    onChange={(e) => {
+                                                                        e.preventDefault();
+                                                                        moveStateToTier(state, parseInt(e.target.value));
+                                                                    }}
+                                                                >
+                                                                    <option value={1}>Tier 1</option>
+                                                                    <option value={2}>Tier 2</option>
+                                                                    <option value={3}>Tier 3</option>
+                                                                </select>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <button className="border-2 border-black rounded-md p-2" onClick={() => setShowCostOfLivingInput3(!showCostOfLivingInput3)}>
+                                                    {showCostOfLivingInput3? "Save Tier 3" : " Edit Tier 3"}
+                                                </button>
+                                            </div>
+                                        )} 
+                                    </div>
                                     )}
                                 </div>
-                                )}
-
-                                {/* Tier 3 */}
-                                {!isTierEmpty('tier3') && (
-                                    <div className="flex flex-col gap-4">
-                                        <button className="border-2 border-black hover:bg-gray-200 rounded-md p-2" type="button" onClick={() => setShowTier3(!showTier3)}>
-                                            Tier 3
-                                        </button>
-                                    {showTier3 && (
-                                        <div className="flex flex-col gap-4">
-                                            <div className="overflow-y-auto max-h-72">
-                                                {Object.keys(costOfLiving.tier3).map((state) => (
-                                                    <div key={state} className="flex flex-row gap-4 justify-between items-center h-10">
-                                                        <label htmlFor="Cost of Living">{state}</label>
-                                                        {showCostOfLivingInput3 && (
-                                                            <select 
-                                                                className="border-2 border-black rounded-md p-2"
-                                                                value={3}
-                                                                onChange={(e) => {
-                                                                    e.preventDefault();
-                                                                    moveStateToTier(state, parseInt(e.target.value));
-                                                                }}
-                                                            >
-                                                                <option value={1}>Tier 1</option>
-                                                                <option value={2}>Tier 2</option>
-                                                                <option value={3}>Tier 3</option>
-                                                            </select>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <button className="border-2 border-black rounded-md p-2" onClick={() => setShowCostOfLivingInput3(!showCostOfLivingInput3)}>
-                                                {showCostOfLivingInput3? "Save Tier 3" : " Edit Tier 3"}
-                                            </button>
-                                        </div>
-                                    )} 
-                                </div>
-                                )}
-                        </div>
-                        
-                        )}
-                        <button className=" bg-green-600 text-white hover:bg-green-700 rounded-md p-2" type="submit" onClick={handleSubmit}>Save</button>
-                    </form>
-                </div>
-                )}
-            </div>
-            {successMessage && (
-                    <div className="flex justify-center border border-green-200 rounded-md p-3 bg-green-50">
-                        <p className="text-green-600 text-sm">{successMessage}</p>
+                            )}
+                            
+                            <button className="bg-green-600 text-white hover:bg-green-700 rounded-md p-2" type="submit" onClick={handleSubmit}>Save</button>
+                        </form>
                     </div>
                 )}
+            </div>
+            {/* {successMessage && (
+                <div className="flex justify-center border border-green-200 rounded-md p-3 bg-green-50">
+                    <p className="text-green-600 text-sm">{successMessage}</p>
+                </div>
+            )} */}
         </div>
     )
 }

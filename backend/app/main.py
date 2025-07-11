@@ -200,13 +200,14 @@ def process_data(file_name: str):
                 # Skip validation if valid_values is "any"
                 if valid_values == "any":
                     continue
-                # Ensure valid_values is a list
+                # Ensure valid_values is a list and convert to lowercase
                 if isinstance(valid_values, str):
-                    valid_values = [valid_values]
+                    valid_values = [valid_values.strip().lower()]
+                else:
+                    valid_values = [val.strip().lower() for val in valid_values]
                 
                 # Clean the data values (strip whitespace and handle NaN)
-                cleaned_values = df[field].astype(str).str.strip()
-                # Filter out NaN values for comparison
+                cleaned_values = df[field].astype(str).str.strip().str.lower()
                 non_null_mask = ~df[field].isna()
                 cleaned_values = cleaned_values[non_null_mask]
                 

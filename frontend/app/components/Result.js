@@ -125,11 +125,24 @@ export default function Result() {
                                     
                                     const invalidFields = [];
                                     extractedData.warnings.forEach(warning => {
-                                        Object.entries(item).forEach(([fieldName, value]) => {
-                                            if (value && value !== 'N/A' && warning.toLowerCase().includes(value.toString().toLowerCase())) {
+                                        // Parse warning to extract field name and invalid values
+                                        // Warning format: "Invalid field_name values: [value1, value2, ...]"
+                                        const match = warning.match(/Invalid (\w+) values: \[(.*)\]/);
+                                        if (match) {
+                                            const fieldName = match[1];
+                                            const invalidValuesStr = match[2];
+                                            // Parse the invalid values list and convert to lowercase
+                                            const invalidValues = invalidValuesStr
+                                                .split(',')
+                                                .map(val => val.trim().replace(/['"]/g, '').toLowerCase())
+                                                .filter(val => val.length > 0);
+                                            
+                                            // Check if this student's value for this field is in the invalid list (case insensitive)
+                                            const studentValue = item[fieldName];
+                                            if (studentValue && invalidValues.includes(studentValue.toString().toLowerCase())) {
                                                 invalidFields.push(fieldName);
                                             }
-                                        });
+                                        }
                                     });
                                     return [...new Set(invalidFields)]; // Remove duplicates
                                 };
@@ -139,19 +152,69 @@ export default function Result() {
                                 return (
                                     <div 
                                         key={index} 
-                                        className={`border p-2 m-2 rounded bg-white ${
+                                        className={`flex flex-col justify-left items-start border p-2 m-2 rounded bg-white gap-1 ${
                                             invalidFields.length > 0 
-                                                ? 'border-red-500 border-2' 
+                                                ? 'border-red-200 border-2' 
                                                 : 'border-gray-200'
                                         }`}
                                     >
-                                        <p><strong>Name:</strong> <span className={invalidFields.includes('name') ? 'bg-red-200 px-1 rounded' : ''}>{item.name || 'N/A'}</span></p>
-                                        <p><strong>School Year:</strong> <span className={invalidFields.includes('school_year') ? 'bg-red-200 px-1 rounded' : ''}>{item.school_year || 'N/A'}</span></p>
+                                        <h3 className="text-lg font-bold"><span className={invalidFields.includes('name') ? 'bg-red-200 px-1 rounded' : ''}>{item.name || 'N/A'}</span></h3>
+                                        <div className="flex flex-row justify-between border-2 border-gray-300 rounded-md p-2 items-start gap-1 w-full">
+                                            <div className="flex flex-col justify-left items-start gap-1 border-2 border-gray-300 rounded-md p-2 w-1/2">
+                                                <h2 className="text-md font-bold ">Eligibility</h2>
+                                                <p>School Year: <span className={invalidFields.includes('school_year') ? 'bg-red-200 px-1 rounded' : ''}>{item.school_year || 'N/A'}</span></p>
+                                                <p>Accepted Internship: <span className={invalidFields.includes('accepted_internship') ? 'bg-red-200 px-1 rounded' : ''}>{item.accepted_internship || 'N/A'}</span></p>
+                                                <p>Additional Funding: <span className={invalidFields.includes('additional_funding') ? 'bg-red-200 px-1 rounded' : ''}>{item.additional_funding || 'N/A'}</span></p>
+                                                <p>Internship Length: <span>{`${Math.ceil((new Date(item.end_date) - new Date(item.start_date)) / (1000 * 60 * 60 * 24 * 7))} weeks`}</span></p>
+                                                <p>Hours: <span className={invalidFields.includes('hours') ? 'bg-red-200 px-1 rounded' : ''}>{item.hours || 'N/A'}</span></p>
+                                            </div>
+                                            <div className="flex flex-col justify-left items-start gap-1 border-2 border-gray-300 rounded-md p-2 w-1/2 ">
+                                                <h2 className="text-md font-bold ">Scores</h2>
+                                                <table className="w-full border-collapse">
+                                                    <tbody>
+                                                        {/* Location */}
+                                                        <tr className="border-b">            
+                                                            <td className="text-sm text-left border-r">
+                                                                <span className={invalidFields.includes('location') ? 'bg-red-200 px-1 rounded' : ''}>{item.location || 'N/A'}</span>
+                                                            </td>
+                                                            <td className="text-sm text-right py-1">50</td>
+                                                        </tr>
+                                                        {/* Need Level */}
+                                                        <tr className="border-b">
+                                                            <td className="text-sm text-left border-r">
+                                                                <span className={invalidFields.includes('need_level') ? 'bg-red-200 px-1 rounded' : ''}>{item.need_level || 'N/A'}</span>
+                                                            </td>
+                                                            <td className="text-sm text-right py-1">50</td>
+                                                        </tr>
+                                                        {/* Internship Type */}
+                                                        <tr className="border-b">
+                                                            <td className="text-sm text-left border-r">
+                                                                <span className={invalidFields.includes('internship_type') ? 'bg-red-200 px-1 rounded' : ''}>{item.internship_type || 'N/A'}</span>
+                                                            </td>
+                                                            <td className="text-sm text-right py-1">50</td>
+                                                        </tr>
+                                                        {/* Paid Internship */}
+                                                        <tr className="border-b">
+                                                            <td className="text-sm text-left border-r">
+                                                                <span className={invalidFields.includes('paid_internship') ? 'bg-red-200 px-1 rounded' : ''}>{item.paid_internship || 'N/A'}</span>
+                                                            </td>
+                                                            <td className="text-sm text-right py-1">50</td>
+                                                        </tr>
+                                                        
+                                                        
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        {/* <p><strong>School Year:</strong> <span className={invalidFields.includes('school_year') ? 'bg-red-200 px-1 rounded' : ''}>{item.school_year || 'N/A'}</span></p>
+                                        <p><strong>Accepted Internship:</strong> <span className={invalidFields.includes('accepted_internship') ? 'bg-red-200 px-1 rounded' : ''}>{item.accepted_internship || 'N/A'}</span></p>
+                                        <p><strong>Additional Funding:</strong> <span className={invalidFields.includes('additional_funding') ? 'bg-red-200 px-1 rounded' : ''}>{item.additional_funding || 'N/A'}</span></p>
                                         <p><strong>Location:</strong> <span className={invalidFields.includes('location') ? 'bg-red-200 px-1 rounded' : ''}>{item.location || 'N/A'}</span></p>
                                         <p><strong>Need Level:</strong> <span className={invalidFields.includes('need_level') ? 'bg-red-200 px-1 rounded' : ''}>{item.need_level || 'N/A'}</span></p>
                                         <p><strong>Internship Type:</strong> <span className={invalidFields.includes('internship_type') ? 'bg-red-200 px-1 rounded' : ''}>{item.internship_type || 'N/A'}</span></p>
-                                        <p><strong>Hours:</strong> <span className={invalidFields.includes('hours') ? 'bg-red-200 px-1 rounded' : ''}>{item.hours || 'N/A'}</span></p>
+                                        <p><strong>Hours:</strong> <span className={invalidFields.includes('hours') ? 'bg-red-200 px-1 rounded' : ''}>{item.hours || 'N/A'}</span></p> */}
                                     </div>
+
                                 );
                             })}
                         </div>

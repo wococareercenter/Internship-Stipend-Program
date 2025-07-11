@@ -6,6 +6,7 @@
             "school_year": "School Year",
             "accepted_internship": "Have you accepted an internship for summer 2023?",
             "additional_funding": "Are you receiving or going to receive funding this summer from other Wofford programs, such as Summer of Service funding from the Bonner Scholars Program or research grants?",
+            "paid_internship": "Is your internship paid or unpaid?",
             "location": "What city and state is your internship located in?",
             "start_date": "What is the start date of your internship?",
             "end_date": "What is the end date of your internship?",
@@ -18,6 +19,7 @@
             "School Year": "school_year",
             "Have you accepted an internship for summer 2023?": "accepted_internship",
             "Are you receiving or going to receive funding this summer from other Wofford programs, such as Summer of Service funding from the Bonner Scholars Program or research grants?": "additional_funding",
+            "Is your internship paid or unpaid?": "paid_internship",
             "What city and state is your internship located in?": "location",
             "What is the start date of your internship?": "start_date",
             "What is the end date of your internship?": "end_date",
@@ -36,6 +38,10 @@
             },
             "additional_funding": {
                 "valid_values": ["Yes", "No"],
+                "required": true 
+            },
+            "paid_internship": {
+                "valid_values": ["Paid", "Unpaid"],
                 "required": true 
             },
             "internship_type": {

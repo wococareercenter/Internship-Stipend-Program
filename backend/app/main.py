@@ -37,35 +37,46 @@ async def scale_post(data: Scale):
     print(f"POST received: {data.scale}")
     return {"result": data.scale}
 
-### FILE LIST ENDPOINT ###
-@app.get("/api/files")
-async def list_files():
+### FILE ENDPOINT ###
+@app.get("/api/file")
+async def get_file():
     """
-    List all uploaded files
+    Get the current uploaded file info and content
     """
     try:
         uploads_dir = "uploads"
         if not os.path.exists(uploads_dir):
-            return {"files": []}
+            return {"file": None, "content": None}
         
         # Check if there's a file in uploads directory
-        files = []
         for filename in os.listdir(uploads_dir):
             file_path = os.path.join(uploads_dir, filename)
             if os.path.isfile(file_path):
                 stat = os.stat(file_path)
+                
+                # Get file content if it's a CSV
+                content = None
+                file_extension = os.path.splitext(filename)[1].lower()
+                if file_extension == '.csv':
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            content = f.read()
+                    except Exception as e:
+                        print(f"Error reading file content: {e}")
+                
                 return {
                     "file": {
                         "name": filename,
                         "size": stat.st_size,
                         "uploadDate": datetime.fromtimestamp(stat.st_mtime).isoformat()
-                    }
+                    },
+                    "content": content
                 }
         
         # No file found
-        return {"file": None}
+        return {"file": None, "content": None}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to list files: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get file: {str(e)}")
 
 ### FILE UPLOAD ENDPOINT ###
 @app.post("/api/upload")
@@ -123,50 +134,8 @@ async def upload_file(file: UploadFile):
             detail=f"Upload failed: {str(e)}"
         )
 
-### FILE DELETE ENDPOINT ###
-@app.delete("/api/files/{file_name}")
-async def delete_file(file_name: str):
-    """
-    Delete a file (kept for compatibility but not needed in single-file mode)
-    """
-    try:
-        file_path = os.path.join("uploads", file_name)
-        if not os.path.exists(file_path):
-            raise HTTPException(status_code=404, detail="File not found")
-        os.remove(file_path)
-        return {"message": "File deleted successfully"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")
 
-### FILE GET ENDPOINT ###
-@app.get("/api/files/{file_name}")
-async def get_file(file_name: str):
-    """
-    Get file content
-    """
-    try:
-        file_path = os.path.join("uploads", file_name)
-        if not os.path.exists(file_path):
-            raise HTTPException(status_code=404, detail="File not found")
-        
-        # Check if it's a CSV file
-        file_extension = os.path.splitext(file_name)[1].lower()
-        if file_extension != '.csv':
-            raise HTTPException(
-                status_code=400,
-                detail="Only CSV files are supported for preview"
-            )
-        
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-        
-        return {"content": content}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to read file: {str(e)}")
+
 
 ### Extract Data ENDPOINT ###
 def load_csv_config():
@@ -174,13 +143,14 @@ def load_csv_config():
     Load the CSV config
     """
     try:
-        with open("../csv_config.json", "r") as f:
+        with open("csv_config.json", "r") as f:
             return json.load(f)
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="CSV config file not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to load CSV config: {str(e)}")
 
+# Process Data
 def process_data(file_name: str):
     """
     Process the data from the CSV file
@@ -193,7 +163,7 @@ def process_data(file_name: str):
         renamed_columns = csv_format["renamed_columns"]
 
         # Load the CSV file and rename the columns
-        df = pd.read_csv(f"../uploads/{file_name}").loc[:, columns.values()].rename(columns=renamed_columns)
+        df = pd.read_csv(f"uploads/{file_name}").loc[:, columns.values()].rename(columns=renamed_columns)
 
         # Validate the data
         warnings = []
@@ -224,6 +194,7 @@ def process_data(file_name: str):
 class ExtractData(BaseModel):
     file_name: str
 
+# Final Extract and Send Data to Frontend
 @app.post("/api/extract")
 async def extract_data_endpoint(data: ExtractData):
     """

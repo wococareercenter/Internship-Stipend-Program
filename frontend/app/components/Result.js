@@ -34,7 +34,7 @@ export default function Result() {
         
         try {
             // Connect to FastAPI backend instead of Next.js API
-            const response = await fetch('http://localhost:8000/api/files');
+            const response = await fetch('http://localhost:8000/api/file');
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.detail || errorData.error || `HTTP ${response.status}: ${response.statusText}`);
@@ -56,15 +56,19 @@ export default function Result() {
         
         try {
             // Connect to FastAPI backend instead of Next.js API
-            const response = await fetch(`http://localhost:8000/api/files/${encodeURIComponent(fileName)}`);
+            const response = await fetch('http://localhost:8000/api/file');
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.detail || errorData.error || `HTTP ${response.status}: ${response.statusText}`);
             }
             
             const data = await response.json();
-            setCsvData(data.content);
-            setSelectedFile(fileName);
+            if (data.content) {
+                setCsvData(data.content);
+                setSelectedFile(fileName);
+            } else {
+                setError('No CSV content available');
+            }
         } catch (err) {
             setError('Failed to load CSV file');
             console.error('Error loading CSV:', err);

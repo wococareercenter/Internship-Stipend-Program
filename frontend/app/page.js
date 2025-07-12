@@ -26,7 +26,7 @@ export default function Home() {
       <Result />
 
       {/* Footer */}
-      <footer className="row-start-3 flex flex-wrap items-center justify-center text-sm p-2">
+      <footer className="row-start-3 flex flex-wrap items-center justify-center text-sm">
        Updated July 11, 2025
       </footer>
     </div>

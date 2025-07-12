@@ -46,6 +46,9 @@ export default function Result() {
         setError(null);
         
         try {
+            // Add artificial delay for testing loading state
+            await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay
+            
             // First, get the current file info
             // console.log("Fetching file info...");
             const fileResponse = await fetch('http://localhost:8000/api/file');
@@ -117,6 +120,11 @@ export default function Result() {
                     {!isLoading && !error && extractedData && (
                         <p className="text-sm">Total Students: {extractedData.total_records} </p>
                     )}
+                    {isLoading && (
+                        <div className="flex flex-row justify-left items-center gap-4 p-2">
+                            <p className="text-sm">Loading...</p>
+                        </div>
+                    )}
                 </div>
                 <button 
                     onClick={handleRefresh}
@@ -129,9 +137,12 @@ export default function Result() {
             <div className="space-y-2">
                 {isLoading && (
                     <div className="flex flex-wrap gap-4 w-full p-5">   
-                        {Array.from({ length: 10 }).map((_, index) => (
-                            <div key={index} className="flex flex-col items-center justify-center bg-gray-100 animate-pulse rounded-md w-80 h-64">
-                                <div className="w-full h-full bg-gray-200 rounded-md p-2"></div>
+                        {Array.from({ length: 50 }).map((_, index) => (
+                            <div key={index} className="flex flex-col justify-left items-start p-2 m-2 rounded bg-white gap-1 shadow-md min-w-80 w-80 h-fit">
+                                <div className="flex flex-row justify-between items-center w-full">
+                                    <div className="w-32 h-6 bg-gray-200 rounded animate-pulse"></div>
+                                    <div className="w-8 h-6 bg-gray-200 rounded animate-pulse"></div>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -144,9 +155,9 @@ export default function Result() {
                 )}
                 
                 {!isLoading && !error && extractedData && (
-                    <div className="text-center flex flex-col items-center justify-center border-2 border-gray-300 rounded-md p-2">
+                    <div className="text-center flex flex-col items-center justify-center rounded-md p-2">
                         {/* Student Data */}
-                        <div className="flex flex-wrap gap-4 overflow-y-auto max-h-[calc(100vh/1.5)] border-2 border-gray-300 rounded-md p-2">
+                        <div className="flex flex-wrap gap-4 overflow-y-auto max-h-[calc(100vh/1.5)] rounded-md p-2">
                             {extractedData.data.map((item, index) => {
                                 // Check for invalid elements using warnings from backend
                                 const getInvalidFields = () => {
@@ -182,7 +193,9 @@ export default function Result() {
                                 return (
                                     <div 
                                         key={index} 
-                                        className={`flex flex-col justify-left items-start p-2 m-2 rounded bg-white gap-1 shadow-md cursor-pointer hover:bg-gray-50 min-w-80 ${isOpen ? 'w-full max-w-md' : 'w-80'}`}
+                                        className={`flex flex-col justify-left items-start p-2 m-2 rounded bg-white gap-1 shadow-md cursor-pointer hover:bg-gray-50 min-w-100
+                                            ${invalidFields.length > 0 ? 'border-2 border-red-200 border-dashed rounded-md' : ''}
+                                            `}
                                         onClick={() => handleStudentClick(index)}
                                     >
                                         <div className="flex flex-row justify-between items-center w-full">
@@ -191,8 +204,11 @@ export default function Result() {
                                                 {item.score}
                                             </span>
                                         </div>
+
+                                        {/* Breakdown */}
                                         <div className={`flex flex-row justify-left rounded-md items-start gap-1 w-full ${isOpen ? 'flex' : 'hidden'}`}>
                                             <div className="flex flex-col justify-left gap-2 items-start text-sm rounded-md p-2">
+                                                {/* Eligibility */}
                                                 <h2 className="text-[16px] font-bold  ">Eligibility</h2>
                                                 <p>School Year: <span className={`font-semibold ${invalidFields.includes('school_year') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.school_year || 'N/A'}</span></p>
                                                 <p>Accepted Internship: <span className={`font-semibold ${invalidFields.includes('accepted_internship') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.accepted_internship || 'N/A'}</span></p>
@@ -200,34 +216,36 @@ export default function Result() {
                                                 <p>Internship Length: <span className={`font-semibold ${invalidFields.includes('internship_length') ? 'bg-red-200 px-1 rounded' : ''}`}>{`${Math.ceil((new Date(item.end_date) - new Date(item.start_date)) / (1000 * 60 * 60 * 24 * 7))} weeks`}</span></p>
                                                 <p>Hours: <span className={`font-semibold ${invalidFields.includes('hours') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.hours || 'N/A'}</span></p>
                                             </div>
-                                            <div className="flex flex-col justify-left items-start rounded-md p-2 w-1/2 ">
+
+                                            {/* Scores */}
+                                            <div className="flex flex-col justify-center items-start rounded-md p-2">
                                                 <h2 className="text-[16px] font-bold ">Scores</h2>
                                                 <table className="w-full border-collapse">
                                                     <tbody>
                                                         {/* Location */}
                                                         <tr className="border-b">            
-                                                            <td className="text-sm text-left border-r">
+                                                            <td className="text-sm text-left border-r pr-5">
                                                                 <span className={invalidFields.includes('location') ? 'bg-red-200 px-1 rounded' : ''}>{formatStateName(item.location) || 'N/A'}</span>
                                                             </td>
-                                                                                                                         <td className="text-sm text-right py-1">{item.score_breakdown.location !== undefined ? item.score_breakdown.location : 'N/A'}</td>
+                                                                                                                         <td className="text-sm text-right py-1 pl-5">{item.score_breakdown.location !== undefined ? item.score_breakdown.location : 'N/A'}</td>
                                                         </tr>
                                                         {/* Need Level */}
                                                         <tr className="border-b">
-                                                            <td className="text-sm text-left border-r">
+                                                            <td className="text-sm text-left border-r pr-5">
                                                                 <span className={invalidFields.includes('need_level') ? 'bg-red-200 px-1 rounded' : ''}>{item.need_level || 'N/A'}</span>
                                                             </td>
                                                                                                                          <td className="text-sm text-right py-1">{item.score_breakdown.need_level !== undefined ? item.score_breakdown.need_level : 'N/A'}</td>
                                                         </tr>
                                                         {/* Internship Type */}
                                                         <tr className="border-b">
-                                                            <td className="text-sm text-left border-r">
+                                                            <td className="text-sm text-left border-r pr-5">
                                                                 <span className={invalidFields.includes('internship_type') ? 'bg-red-200 px-1 rounded' : ''}>{item.internship_type || 'N/A'}</span>
                                                             </td>
                                                                                                                          <td className="text-sm text-right py-1">{item.score_breakdown.internship_type !== undefined ? item.score_breakdown.internship_type : 'N/A'}</td>
                                                         </tr>
                                                         {/* Paid Internship */}
                                                         <tr className="border-b">
-                                                            <td className="text-sm text-left border-r">
+                                                            <td className="text-sm text-left border-r pr-5">
                                                                 <span className={invalidFields.includes('paid_internship') ? 'bg-red-200 px-1 rounded' : ''}>{item.paid_internship || 'N/A'}</span>
                                                             </td>
                                                                                                                          <td className="text-sm text-right py-1">{item.score_breakdown.paid_internship !== undefined ? item.score_breakdown.paid_internship : 'N/A'}</td>

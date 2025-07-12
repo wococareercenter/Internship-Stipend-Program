@@ -175,7 +175,7 @@ class ExtractData(BaseModel):
     file_name: str
     scale: dict
 
-# Clean Location Column
+# Clean Location & Hours Column
 def clean_location_column(df):
     """
     Clean the location column using LLM
@@ -184,7 +184,7 @@ def clean_location_column(df):
     api_key = os.environ.get('OPENAI_API_KEY')
     
     if not api_key:
-        print("Warning: OPENROUTER_API_KEY not found, skipping location cleaning")
+        print("Warning: OPENAI_API_KEY not found, skipping location cleaning")
         return df
     
     client = OpenAI(api_key=api_key)
@@ -254,6 +254,53 @@ def clean_location_column(df):
     
     return clean_df
 
+def clean_hours_column(df):
+    """
+    Clean the hours column to standardize values
+    """
+    clean_df = df.copy()
+    
+    def standardize_hours(hours_value):
+        """Standardize hours value to match expected format"""
+        if pd.isna(hours_value) or hours_value is None:
+            return "Unknown"
+        
+        hours_str = str(hours_value).strip().lower()
+        
+        # Handle common variations
+        if any(phrase in hours_str for phrase in ['less than 30', 'under 30', '< 30', '0-29']):
+            return "Less than 30 Hours"
+        elif any(phrase in hours_str for phrase in ['30+', '30 or more', '30 and above', '30+ hours']):
+            return "30+ Hours"
+        elif any(phrase in hours_str for phrase in ['30 hours', '30 hrs', '30']):
+            return "30+ Hours"
+        elif any(phrase in hours_str for phrase in ['20-29', '20 to 29', '20-30']):
+            return "Less than 30 Hours"
+        elif any(phrase in hours_str for phrase in ['40+', '40 hours', '40 hrs', 'full time']):
+            return "30+ Hours"
+        elif any(phrase in hours_str for phrase in ['part time', 'part-time', '10-20', '15-25']):
+            return "Less than 30 Hours"
+        else:
+            # Try to extract numeric value
+            import re
+            numbers = re.findall(r'\d+', hours_str)
+            if numbers:
+                hours_num = int(numbers[0])
+                if hours_num >= 30:
+                    return "30+ Hours"
+                else:
+                    return "Less than 30 Hours"
+            else:
+                return "Unknown"
+    
+    # Apply standardization to hours column
+    if 'hours' in clean_df.columns:
+        clean_df['hours'] = clean_df['hours'].apply(standardize_hours)
+        print(f"Cleaned hours column. Unique values: {clean_df['hours'].unique()}")
+    
+    return clean_df
+
+
 # Process Data
 def process_data(file_name: str, scale: dict = None):
     """
@@ -271,7 +318,7 @@ def process_data(file_name: str, scale: dict = None):
         renamed_columns = csv_format["renamed_columns"]
 
         # Load the CSV file first to see what columns exist
-        df = pd.read_csv(f"uploads/{file_name}")
+        df = pd.read_csv(f"uploads/{file_name}").dropna(how='all')
         
         # Clean column names and renamed columns (strip whitespace and convert to lowercase)
         df.columns = df.columns.str.strip().str.lower()
@@ -297,6 +344,12 @@ def process_data(file_name: str, scale: dict = None):
         
         # Select only the columns we want and rename them
         df = df.loc[:, expected_columns].rename(columns=column_mapping)
+
+        # clean the location column
+        df = clean_location_column(df)
+        
+        # clean the hours column
+        df = clean_hours_column(df)
 
         # Validate the data
         warnings = []
@@ -328,8 +381,6 @@ def process_data(file_name: str, scale: dict = None):
                 if len(invalid_values) > 0:
                     warnings.append(f'Invalid {field} values: {invalid_values}')
 
-        # clean the location column
-        df = clean_location_column(df)
         
         # Convert DataFrame to records, handling NaN values
         records = df.to_dict("records")

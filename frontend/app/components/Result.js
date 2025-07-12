@@ -265,12 +265,13 @@ export default function Result() {
                         </div>
 
                         {extractedData.warnings && extractedData.warnings.length > 0 && (
-                            <div className="mt-2 text-left mx-auto w-full">
-                                <p className="text-yellow-600 font-semibold">
-                                    Sorry Jenn, I'm not sure what to do with these values so 
-                                    I can't add them to the score. But don't worry, 
-                                    I'll highlight them so you can check them out:
-                                </p>
+                            <div className="mt-4 text-center mx-auto w-full">
+                                <span className="bg-red-100 px-1 rounded font-semibold">
+                                        Sorry Jenn, I'm not sure what to do with these values so 
+                                        I can't add them to the score. But don't worry, 
+                                        I'll highlight the students so you can double check my work!
+                                </span>
+                               
                                 <ul className="text-sm list-disc list-inside">
                                     {extractedData.warnings.map((warning, index) => (
                                         <li key={index}>{warning.split(':')[0].trim()}: <span className="text-red-600">{warning.split(':')[1].trim()}</span></li>

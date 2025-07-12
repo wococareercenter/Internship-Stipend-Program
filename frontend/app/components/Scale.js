@@ -292,10 +292,10 @@ export default function Scale() {
         setShowCostOfLivingInput3(false);
 
         const currentScale = {
-            fafsaScale: fafsaScale,
+            fafsa_scale: fafsaScale,
             paid: paid,
-            internshipType: internshipType,
-            costOfLiving: costOfLiving
+            internship_type: internshipType,
+            cost_of_living: costOfLiving
         };
 
         console.log({scale: currentScale});

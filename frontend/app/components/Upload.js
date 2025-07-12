@@ -245,6 +245,7 @@ export default function Upload() {
                 className="hidden"
             />
             <button 
+                className="hover:cursor-pointer"
                 type="button"
                 onClick={() => {
                     if (fileInputRef.current) {

@@ -128,9 +128,9 @@ export default function Result() {
                 </div>
                 <button 
                     onClick={handleRefresh}
-                    className="px-3 py-1 bg-green-100 rounded hover:bg-green-200 text-sm"
+                    className="px-3 py-1 bg-green-100 rounded hover:bg-green-200 text-sm hover:cursor-pointer"
                 >
-                    Refresh
+                    Refresh for a different scale
                 </button>
             </div>
             

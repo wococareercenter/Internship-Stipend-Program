@@ -106,7 +106,7 @@ export default function File() {
 
     return (
         <div className="flex flex-col gap-3 border-2 border-black rounded-md p-3 w-full h-full flex-shrink-0 hover:bg-gray-50 cursor-pointer relative"> 
-            <button className="hover:text-zinc-500 flex items-center justify-between w-full" type="button" onClick={() => setShowFile(!showFile)}>
+            <button className="hover:cursor-pointer flex items-center justify-between w-full" type="button" onClick={() => setShowFile(!showFile)}>
                 <h2 className="text-xl font-bold">Current File</h2>
                 <svg 
                     className={`w-5 h-5 transition-transform ${showFile ? 'rotate-180' : ''}`} 

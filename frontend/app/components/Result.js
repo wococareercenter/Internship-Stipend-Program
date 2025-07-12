@@ -1,25 +1,34 @@
 "use client";
 import { useState, useEffect } from "react";
-import { CsvToHtmlTable } from "react-csv-to-table";
+import { useScale } from "../context/ScaleContext";
 
 export default function Result() {
-    const [uploadedFiles, setUploadedFiles] = useState([]);
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [csvData, setCsvData] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [successMessage, setSuccessMessage] = useState("");
-    const [deletingFiles, setDeletingFiles] = useState(new Set());
+    const { scale } = useScale();
     const [isMounted, setIsMounted] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [extractedData, setExtractedData] = useState(null);
+    const [error, setError] = useState(null);
+    const [openStudents, setOpenStudents] = useState(new Set());
+
+    // Function to format state names with spaces for display
+    const formatStateName = (stateName) => {
+        if (!stateName || stateName === 'N/A' || stateName === 'Unknown') {
+            return stateName;
+        }
+        
+        // Add spaces before capital letters (except the first character)
+        return stateName.replace(/([A-Z])/g, ' $1').trim();
+    };
 
     useEffect(() => {
+        // console.log("Component mounted, starting fetch...");
         setIsMounted(true);
-        fetchUploadedFiles();
+        fetchExtractedData();
         
         // Listen for file upload events
-        const handleFileUploaded = (event) => {
-            fetchUploadedFiles();
-            
+        const handleFileUploaded = () => {
+            console.log("File uploaded, refreshing data...");
+            fetchExtractedData();
         };
         
         window.addEventListener('fileUploaded', handleFileUploaded);
@@ -30,262 +39,254 @@ export default function Result() {
         };
     }, []);
 
-    const fetchUploadedFiles = async () => {
+    // Load extracted data
+    const fetchExtractedData = async () => {
+        // console.log("Starting fetchExtractedData...");
         setIsLoading(true);
-        setError("");
+        setError(null);
         
         try {
-            const response = await fetch('/api/files');
-            if (!response.ok) {
-                throw new Error('Failed to fetch files');
+            // Add artificial delay for testing loading state
+            await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay
+            
+            // First, get the current file info
+            // console.log("Fetching file info...");
+            const fileResponse = await fetch('http://localhost:8000/api/file');
+            const fileData = await fileResponse.json();
+            // console.log("File data:", fileData);
+            
+            if (!fileData.file) {
+                console.log("No file found");
+                setError("No file uploaded yet. Please upload a CSV file first.");
+                return;
             }
             
-            const data = await response.json();
-            setUploadedFiles(data.files || []);
-        } catch (err) {
-            setError('Failed to load uploaded files');
-            console.error('Error fetching files:', err);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const loadCsvFile = async (fileName) => {
-        setIsLoading(true);
-        setError("");
-        
-        try {
-            const response = await fetch(`/api/files/${encodeURIComponent(fileName)}`);
-            if (!response.ok) {
-                throw new Error('Failed to load file');
-            }
-            
-            const csvContent = await response.text();
-            setCsvData(csvContent);
-            setSelectedFile(fileName);
-        } catch (err) {
-            setError('Failed to load CSV file');
-            console.error('Error loading CSV:', err);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const formatFileSize = (bytes) => {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    };
-
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString();
-    };
-
-    const handleDeleteFile = async (fileName) => {
-        // Show confirmation dialog
-        if (!confirm(`Are you sure you want to delete "${fileName}"?`)) {
-            return;
-        }
-        
-        setDeletingFiles(prev => new Set(prev).add(fileName));
-        setError("");
-        
-        try {
-            const response = await fetch(`/api/files/${encodeURIComponent(fileName)}`, {
-                method: 'DELETE',
+            // Now extract data from the uploaded file
+            // console.log("Extracting data from file:", fileData.file.name);
+            const extractResponse = await fetch('http://localhost:8000/api/extract', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    file_name: fileData.file.name,
+                    scale: scale
+                })
             });
             
-            if (!response.ok) {
-                throw new Error('Failed to delete file');
+            if (!extractResponse.ok) {
+                throw new Error(`HTTP error! status: ${extractResponse.status}`);
             }
             
-            // Refresh the file list
-            fetchUploadedFiles();
+            const data = await extractResponse.json();
+            console.log("Extracted data:", data);
+            setExtractedData(data);
             
-            // Show success message
-            setSuccessMessage(`File "${fileName}" deleted successfully!`);
-            setTimeout(() => setSuccessMessage(""), 3000);
-            
-        } catch (err) {
-            setError('Failed to delete file. Please try again.');
+        } catch (error) {
+            console.error("Yikes, data was not fetched...", error);
+            setError(error.message);
         } finally {
-            setDeletingFiles(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(fileName);
-                return newSet;
-            });
+            // console.log("Setting loading to false");
+            setIsLoading(false);
         }
+    }
+
+    const handleRefresh = () => {
+        fetchExtractedData();
     };
 
-    
+    const handleStudentClick = (studentId) => {
+        setOpenStudents(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(studentId)) {
+                newSet.delete(studentId);
+            } else {
+                newSet.add(studentId);
+            }
+            return newSet;
+        });
+    };
 
     if (!isMounted) {
-        return (
-            <div className="flex flex-col gap-4 border-2 border-black rounded-md p-5 w-full h-full"> 
-                <h2 className="text-xl font-bold text-center">Results</h2>
-                <div className="flex items-center justify-center h-32">
-                    <div className="text-gray-500">Loading...</div>
-                </div>
-            </div>
-        );
+        // console.log("Not mounted yet, returning null");
+        return null;
     }
 
     return (
-        <div className="flex flex-col gap-4 border-2 border-black rounded-md p-5 w-full h-full"> 
-            <h2 className="text-xl font-bold text-center">Results</h2>
+        <div>
+            <div className="flex justify-between items-center">
+                <div className="flex flex-row justify-left items-center gap-4 p-2">
+                    <h2 className="text-xl font-bold text-center">Results</h2>
+                    {!isLoading && !error && extractedData && (
+                        <p className="text-sm">Total Students: {extractedData.total_records} </p>
+                    )}
+                    {isLoading && (
+                        <div className="flex flex-row justify-left items-center gap-4 p-2">
+                            <p className="text-sm">Loading...</p>
+                        </div>
+                    )}
+                </div>
+                <button 
+                    onClick={handleRefresh}
+                    className="px-3 py-1 bg-green-100 rounded hover:bg-green-200 text-sm hover:cursor-pointer"
+                >
+                    Refresh for a different scale
+                </button>
+            </div>
             
-            {/* File Container */}
             <div className="space-y-2">
-                <h3 className="text-lg font-semibold">Uploaded Files</h3>
-                {isLoading && uploadedFiles.length === 0 && (
-                    <div className="text-center py-4">
-                        <div className="text-gray-500">Loading files...</div>
+                {isLoading && (
+                    <div className="flex flex-wrap gap-4 w-full p-5">   
+                        {Array.from({ length: 50 }).map((_, index) => (
+                            <div key={index} className="flex flex-col justify-left items-start p-2 m-2 rounded bg-white gap-1 shadow-md min-w-80 w-80 h-fit">
+                                <div className="flex flex-row justify-between items-center w-full">
+                                    <div className="w-32 h-6 bg-gray-200 rounded animate-pulse"></div>
+                                    <div className="w-8 h-6 bg-gray-200 rounded animate-pulse"></div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
-                
+
                 {error && (
-                    <div className="border border-red-200 rounded-md p-3 bg-red-50">
-                        <p className="text-red-600 text-sm">{error}</p>
+                    <div className="text-red-600 text-center">
+                        Error: {error}
                     </div>
                 )}
                 
-                {successMessage && (
-                    <div className="border border-green-200 rounded-md p-3 bg-green-50">
-                        <p className="text-green-600 text-sm">{successMessage}</p>
-                    </div>
-                )}
-                
-                {uploadedFiles.length === 0 && !isLoading && (
-                    <div className="text-center py-4">
-                        <p className="text-gray-500">No files uploaded yet</p>
-                    </div>
-                )}
-                
-                {/* File List */}
-                {uploadedFiles.map((file, index) => (
-                    <div 
-                        key={index}
-                        className={`border rounded-md transition-colors ${
-                            selectedFile === file.name 
-                                ? 'border-blue-500 bg-blue-50' 
-                                : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                    >
-                        <div 
-                            className="flex items-center justify-between p-3 cursor-pointer"
-                            onClick={() => {
-                                if (selectedFile === file.name) {
-                                    // Close if already open
-                                    setSelectedFile(null);
-                                    setCsvData("");
-                                } else {
-                                    // Open this file
-                                    loadCsvFile(file.name);
-                                }
-                            }}
-                        >
-                            <div className="flex-1">
-                                <p className="font-medium text-sm">{file.name}</p>
-                                <p className="text-xs text-gray-500">
-                                    {formatFileSize(file.size)} • {formatDate(file.uploadDate)}
-                                </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                {file.name.toLowerCase().endsWith('.csv') && (
-                                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                        CSV
-                                    </span>
-                                )}
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteFile(file.name);
-                                    }}
-                                    disabled={deletingFiles.has(file.name)}
-                                    className={`text-red-500 hover:text-red-700 p-1 transition-colors ${
-                                        deletingFiles.has(file.name) ? 'opacity-50 cursor-not-allowed' : ''
-                                    }`}
-                                    title="Delete file"
-                                >
-                                    {deletingFiles.has(file.name) ? (
-                                        <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-                                    ) : (
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    )}
-                                </button>
-                                <svg 
-                                    className={`w-4 h-4 text-gray-500 transition-transform ${
-                                        selectedFile === file.name ? 'rotate-180' : ''
-                                    }`}
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </div>
+                {!isLoading && !error && extractedData && (
+                    <div className="text-center flex flex-col items-center justify-center rounded-md p-2">
+                        {/* Student Data */}
+                        <div className="flex flex-wrap gap-4 overflow-y-auto max-h-[calc(100vh/1.5)] rounded-md p-2">
+                            {extractedData.data.map((item, index) => {
+                                // Check for invalid elements using warnings from backend
+                                const getInvalidFields = () => {
+                                    if (!extractedData.warnings) return [];
+                                    
+                                    const invalidFields = [];
+                                    extractedData.warnings.forEach(warning => {
+                                        // Parse warning to extract field name and invalid values
+                                        // Warning format: "Invalid field_name values: [value1, value2, ...]"
+                                        const match = warning.match(/Invalid (\w+) values: \[(.*)\]/);
+                                        if (match) {
+                                            const fieldName = match[1];
+                                            const invalidValuesStr = match[2];
+                                            // Parse the invalid values list and convert to lowercase
+                                            const invalidValues = invalidValuesStr
+                                                .split(',')
+                                                .map(val => val.trim().replace(/['"]/g, '').toLowerCase())
+                                                .filter(val => val.length > 0);
+                                            
+                                            // Check if this student's value for this field is in the invalid list (case insensitive)
+                                            const studentValue = item[fieldName];
+                                            if (studentValue && invalidValues.includes(studentValue.toString().toLowerCase())) {
+                                                invalidFields.push(fieldName);
+                                            }
+                                        }
+                                    });
+                                    return [...new Set(invalidFields)]; // Remove duplicates
+                                };
+                                
+                                const invalidFields = getInvalidFields();
+                                const isOpen = openStudents.has(index);
+                                
+                                return (
+                                    <div 
+                                        key={index} 
+                                        className={`flex flex-col justify-left items-start p-2 m-2 rounded bg-white gap-1 shadow-md cursor-pointer hover:bg-gray-50 min-w-100
+                                            ${invalidFields.length > 0 ? 'border-2 border-red-200 border-dashed rounded-md' : ''}
+                                            `}
+                                        onClick={() => handleStudentClick(index)}
+                                    >
+                                        <div className="flex flex-row justify-between items-center w-full">
+                                            <h3 className="text-lg font-bold"><span className={invalidFields.includes('name') ? 'bg-red-200 px-1 rounded' : ''}>{item.name || 'N/A'}</span></h3>
+                                            <span className={`text-lg font-bold px-2 py-1 rounded ${item.score > 14 ? 'bg-green-100' : 'bg-red-100'}`}>
+                                                {item.score}
+                                            </span>
+                                        </div>
+
+                                        {/* Breakdown */}
+                                        <div className={`flex flex-row justify-left rounded-md items-start gap-1 w-full ${isOpen ? 'flex' : 'hidden'}`}>
+                                            <div className="flex flex-col justify-left gap-2 items-start text-sm rounded-md p-2">
+                                                {/* Eligibility */}
+                                                <h2 className="text-[16px] font-bold  ">Eligibility</h2>
+                                                <p>School Year: <span className={`font-semibold ${invalidFields.includes('school_year') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.school_year || 'N/A'}</span></p>
+                                                <p>Accepted Internship: <span className={`font-semibold ${invalidFields.includes('accepted_internship') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.accepted_internship || 'N/A'}</span></p>
+                                                <p>Additional Funding: <span className={`font-semibold ${invalidFields.includes('additional_funding') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.additional_funding || 'N/A'}</span></p>
+                                                <p>Internship Length: <span className={`font-semibold ${invalidFields.includes('internship_length') ? 'bg-red-200 px-1 rounded' : ''}`}>{`${Math.ceil((new Date(item.end_date) - new Date(item.start_date)) / (1000 * 60 * 60 * 24 * 7))} weeks`}</span></p>
+                                                <p>Hours: <span className={`font-semibold ${invalidFields.includes('hours') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.hours || 'N/A'}</span></p>
+                                            </div>
+
+                                            {/* Scores */}
+                                            <div className="flex flex-col justify-center items-start rounded-md p-2">
+                                                <h2 className="text-[16px] font-bold ">Scores</h2>
+                                                <table className="w-full border-collapse">
+                                                    <tbody>
+                                                        {/* Location */}
+                                                        <tr className="border-b">            
+                                                            <td className="text-sm text-left border-r pr-5">
+                                                                <span className={invalidFields.includes('location') ? 'bg-red-200 px-1 rounded' : ''}>{formatStateName(item.location) || 'N/A'}</span>
+                                                            </td>
+                                                                                                                         <td className="text-sm text-right py-1 pl-5">{item.score_breakdown.location !== undefined ? item.score_breakdown.location : 'N/A'}</td>
+                                                        </tr>
+                                                        {/* Need Level */}
+                                                        <tr className="border-b">
+                                                            <td className="text-sm text-left border-r pr-5">
+                                                                <span className={invalidFields.includes('need_level') ? 'bg-red-200 px-1 rounded' : ''}>{item.need_level || 'N/A'}</span>
+                                                            </td>
+                                                                                                                         <td className="text-sm text-right py-1">{item.score_breakdown.need_level !== undefined ? item.score_breakdown.need_level : 'N/A'}</td>
+                                                        </tr>
+                                                        {/* Internship Type */}
+                                                        <tr className="border-b">
+                                                            <td className="text-sm text-left border-r pr-5">
+                                                                <span className={invalidFields.includes('internship_type') ? 'bg-red-200 px-1 rounded' : ''}>{item.internship_type || 'N/A'}</span>
+                                                            </td>
+                                                                                                                         <td className="text-sm text-right py-1">{item.score_breakdown.internship_type !== undefined ? item.score_breakdown.internship_type : 'N/A'}</td>
+                                                        </tr>
+                                                        {/* Paid Internship */}
+                                                        <tr className="border-b">
+                                                            <td className="text-sm text-left border-r pr-5">
+                                                                <span className={invalidFields.includes('paid_internship') ? 'bg-red-200 px-1 rounded' : ''}>{item.paid_internship || 'N/A'}</span>
+                                                            </td>
+                                                                                                                         <td className="text-sm text-right py-1">{item.score_breakdown.paid_internship !== undefined ? item.score_breakdown.paid_internship : 'N/A'}</td>
+                                                        </tr>
+                                                        <tr className="font-bold">
+                                                            <td className="text-sm text-left border-r">Total</td>
+                                                                                                                         <td className="text-sm text-right py-1">{item.score !== undefined ? item.score : 'N/A'}</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                );
+                            })}
                         </div>
 
-                        {/* CSV Preview Dropdown */}
-                        {selectedFile === file.name && csvData && (
-                            <div className="border-t border-gray-200 bg-white">
-                                <div className="p-4">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h4 className="text-sm font-semibold text-gray-700">CSV Preview</h4>
-                                        <button 
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setSelectedFile(null);
-                                                setCsvData("");
-                                            }}
-                                            className="text-gray-500 hover:text-gray-700 text-sm"
-                                        >
-                                            Close
-                                        </button>
-                                    </div>
-                                    <div className="overflow-x-auto overflow-y-auto  max-w-105 max-h-64">
-                                        <CsvToHtmlTable 
-                                            data={csvData}
-                                            csvDelimiter="," 
-                                            tableClassName="min-w-full border-collapse border border-gray-300 text-xs" 
-                                            hasHeader={true}
-                                            tableStyle={{
-                                                borderCollapse: 'collapse',
-                                                width: '100%',
-                                                fontSize: '12px'
-                                            }}
-                                            headerStyle={{
-                                                backgroundColor: '#f3f4f6',
-                                                fontWeight: 'bold',
-                                                padding: '6px',
-                                                border: '1px solid #d1d5db',
-                                                fontSize: '12px'
-                                            }}
-                                            bodyStyle={{
-                                                padding: '6px',
-                                                border: '1px solid #d1d5db',
-                                                fontSize: '12px'
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Loading State for CSV */}
-                        {selectedFile === file.name && isLoading && (
-                            <div className="border-t border-gray-200 bg-white p-4">
-                                <div className="text-center">
-                                    <div className="text-gray-500 text-sm">Loading CSV preview...</div>
-                                </div>
+                        {extractedData.warnings && extractedData.warnings.length > 0 && (
+                            <div className="mt-4 text-center mx-auto w-full">
+                                <span className="bg-red-100 px-1 rounded font-semibold">
+                                        Sorry Jenn, I'm not sure what to do with these values so 
+                                        I can't add them to the score. But don't worry, 
+                                        I'll highlight the students so you can double check my work!
+                                </span>
+                               
+                                <ul className="text-sm list-disc list-inside">
+                                    {extractedData.warnings.map((warning, index) => (
+                                        <li key={index}>{warning.split(':')[0].trim()}: <span className="text-red-600">{warning.split(':')[1].trim()}</span></li>
+                                    ))}
+                                </ul>
                             </div>
                         )}
                     </div>
-                ))}
+                )}
+                
+                {!isLoading && !error && !extractedData && (
+                    <div className="text-center text-gray-500">
+                        No data to display
+                    </div>
+                )}
             </div>
         </div>
     );

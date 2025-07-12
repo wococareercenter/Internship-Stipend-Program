@@ -1,19 +1,33 @@
 import Scale from "./components/Scale";
 import Upload from "./components/Upload";
+import File from "./components/File";
 import Result from "./components/Result";
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <h1 className="text-4xl font-bold">ISP Platform</h1>
-      {/* Body */}
-      <div className="flex flex-row items-start gap-4 border-2 border-black rounded-md p-5 w-full h-full">
-        <Scale />
-        <Upload />
-        <Result />
+    <div className=" p-8 items-left justify-items-left min-h-screen font-[family-name:var(--font-geist-sans)]">
+      <div className="flex flex-row justify-between gap-4 w-full">  
+        <h1 className="text-4xl font-bold mb-4 w-1/2">ISP Platform</h1>
+        {/* Setup */}
+        <div className="flex flex-row justify-center items-stretch gap-4 w-full">
+          <div className="w-full h-15">
+            <Scale />
+          </div>
+          <div className="w-full h-15">
+            <Upload />
+          </div>
+          <div className="w-full h-15">
+            <File />
+          </div>
+        </div>
       </div>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-       Updated July 7, 2025
+      <hr className="my-4 border-1 border-gray-300" />
+      {/* Results */}
+      <Result />
+
+      {/* Footer */}
+      <footer className="row-start-3 flex flex-wrap items-center justify-center text-sm">
+       Updated July 11, 2025
       </footer>
     </div>
   );

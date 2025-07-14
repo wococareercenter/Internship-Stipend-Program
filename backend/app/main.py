@@ -408,7 +408,7 @@ def process_data(file_name: str, scale: dict = None):
                     'noneed': 'noNeed'
                 }
                 scale_key = need_mapping.get(need_level, need_level)
-                need_scores = scale['fafsa_scale']
+                need_scores = scale['fafsaScale']
                 need_score = need_scores.get(scale_key, 0)
                 
 
@@ -434,7 +434,7 @@ def process_data(file_name: str, scale: dict = None):
                     'virtual': 'virtual'
                 }
                 scale_key = type_mapping.get(internship_type, internship_type)
-                type_scores = scale['internship_type']
+                type_scores = scale['internshipType']
                 type_score = type_scores.get(scale_key, 0)
                 score_breakdown['internship_type'] = type_score
                 score += type_score
@@ -445,7 +445,7 @@ def process_data(file_name: str, scale: dict = None):
                 location = record['location']
                 
                 # Look up in cost of living tiers
-                cost_of_living = scale['cost_of_living']
+                cost_of_living = scale['costOfLiving']
                 for tier_name, tier_states in cost_of_living.items():
                     if location in tier_states:
                         location_score = tier_states[location]

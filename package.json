@@ -1,0 +1,15 @@
+{
+  "name": "isp-platform-fullstack",
+  "version": "1.0.0",
+  "description": "ISP Platform - Full Stack with Next.js and FastAPI",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000",
+    "build": "cd frontend && npm run build",
+    "start": "cd frontend && npm start"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+} 

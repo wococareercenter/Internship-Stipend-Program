@@ -17,6 +17,8 @@ location_cache = {}
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://your-project-name.vercel.app",  # Add your Vercel domain
+    "https://*.vercel.app",  # Allow all Vercel subdomains
 ]
 
 app.add_middleware(

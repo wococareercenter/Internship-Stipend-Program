@@ -7,14 +7,14 @@ const nextConfig = {
             destination:
               process.env.NODE_ENV === "development"
                 ? "http://127.0.0.1:8000/api/:path*"
-                : "/api/",
+                : "/api/:path*",  // Same domain in production
           },
           {
             source: "/docs",
             destination:
               process.env.NODE_ENV === "development"
                 ? "http://127.0.0.1:8000/docs"
-                : "/docs",
+                : "/api/docs",  // Same domain in production
           },
         ];
       },

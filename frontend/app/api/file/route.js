@@ -1,22 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(request) {
+export async function GET(request) {
   try {
-    const formData = await request.formData();
-    
     // Forward the request to FastAPI
-    const fastapiResponse = await fetch('http://127.0.0.1:8000/api/upload', {
-      method: 'POST',
-      body: formData,
-    });
-
+    const fastapiResponse = await fetch('http://127.0.0.1:8000/api/file');
     const data = await fastapiResponse.json();
     
     return NextResponse.json(data, { status: fastapiResponse.status });
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('File fetch error:', error);
     return NextResponse.json(
-      { error: 'Upload failed' },
+      { error: 'Failed to fetch file' },
       { status: 500 }
     );
   }

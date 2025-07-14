@@ -35,7 +35,7 @@ export default function File() {
         setError("");
         
         try {
-            const response = await fetch('http://localhost:8000/api/file');
+            const response = await fetch('/api/file');
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.detail || errorData.error || `HTTP ${response.status}: ${response.statusText}`);
@@ -57,7 +57,7 @@ export default function File() {
         setError("");
         
         try {
-            const response = await fetch('http://localhost:8000/api/file');
+            const response = await fetch('/api/file');
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.detail || errorData.error || `HTTP ${response.status}: ${response.statusText}`);

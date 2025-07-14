@@ -2,21 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request) {
   try {
-    const formData = await request.formData();
+    const body = await request.json();
     
     // Forward the request to FastAPI
-    const fastapiResponse = await fetch('http://127.0.0.1:8000/api/upload', {
+    const fastapiResponse = await fetch('http://127.0.0.1:8000/api/scale', {
       method: 'POST',
-      body: formData,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
     });
 
     const data = await fastapiResponse.json();
     
     return NextResponse.json(data, { status: fastapiResponse.status });
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('Scale error:', error);
     return NextResponse.json(
-      { error: 'Upload failed' },
+      { error: 'Scale request failed' },
       { status: 500 }
     );
   }

@@ -51,7 +51,7 @@ export default function Result() {
             
             // First, get the current file info
             // console.log("Fetching file info...");
-            const fileResponse = await fetch('http://localhost:8000/api/file');
+            const fileResponse = await fetch('/api/file');
             const fileData = await fileResponse.json();
             // console.log("File data:", fileData);
             
@@ -63,7 +63,7 @@ export default function Result() {
             
             // Now extract data from the uploaded file
             // console.log("Extracting data from file:", fileData.file.name);
-            const extractResponse = await fetch('http://localhost:8000/api/extract', {
+            const extractResponse = await fetch('/api/extract', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

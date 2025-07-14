@@ -201,9 +201,19 @@ export default function Scale() {
 
         // Call handleSubmit without event parameter
         const currentScale = {
-            fafsa_scale: fafsaScale,
+            fafsa_scale: {
+                very_high_need: fafsaScale.veryHighNeed,
+                high_need: fafsaScale.highNeed,
+                moderate_need: fafsaScale.moderateNeed,
+                low_need: fafsaScale.lowNeed,
+                no_need: fafsaScale.noNeed
+            },
             paid: paid,
-            internship_type: internshipType,
+            internship_type: {
+                in_person: internshipType.inPerson,
+                hybrid: internshipType.hybrid,
+                virtual: internshipType.virtual
+            },
             cost_of_living: costOfLiving
         };
 
@@ -213,7 +223,7 @@ export default function Scale() {
         updateScale(currentScale);
 
         try {
-            const response = await fetch("http://localhost:8000/api/scale", {
+            const response = await fetch("/api/scale", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -292,9 +302,19 @@ export default function Scale() {
         setShowCostOfLivingInput3(false);
 
         const currentScale = {
-            fafsa_scale: fafsaScale,
+            fafsa_scale: {
+                very_high_need: fafsaScale.veryHighNeed,
+                high_need: fafsaScale.highNeed,
+                moderate_need: fafsaScale.moderateNeed,
+                low_need: fafsaScale.lowNeed,
+                no_need: fafsaScale.noNeed
+            },
             paid: paid,
-            internship_type: internshipType,
+            internship_type: {
+                in_person: internshipType.inPerson,
+                hybrid: internshipType.hybrid,
+                virtual: internshipType.virtual
+            },
             cost_of_living: costOfLiving
         };
 
@@ -304,7 +324,7 @@ export default function Scale() {
         updateScale(currentScale);
 
         try {
-            const response = await fetch("http://localhost:8000/api/scale", {
+            const response = await fetch("/api/scale", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

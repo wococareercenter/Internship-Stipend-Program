@@ -401,14 +401,14 @@ def process_data(file_name: str, scale: dict = None):
                 need_level = record['need_level'].lower().replace(' ', '')
                 # Map the CSV values to scale keys
                 need_mapping = {
-                    'veryhighneed': 'veryHighNeed',
-                    'highneed': 'highNeed', 
-                    'moderateneed': 'moderateNeed',
-                    'lowneed': 'lowNeed',
-                    'noneed': 'noNeed'
+                    'veryhighneed': 'very_high_need',
+                    'highneed': 'high_need', 
+                    'moderateneed': 'moderate_need',
+                    'lowneed': 'low_need',
+                    'noneed': 'no_need'
                 }
                 scale_key = need_mapping.get(need_level, need_level)
-                need_scores = scale['fafsaScale']
+                need_scores = scale['fafsa_scale']
                 need_score = need_scores.get(scale_key, 0)
                 
 
@@ -429,12 +429,12 @@ def process_data(file_name: str, scale: dict = None):
                 internship_type = record['internship_type'].lower().replace('-', '')
                 # Map the CSV values to scale keys
                 type_mapping = {
-                    'inperson': 'inPerson',
+                    'inperson': 'in_person',
                     'hybrid': 'hybrid',
                     'virtual': 'virtual'
                 }
                 scale_key = type_mapping.get(internship_type, internship_type)
-                type_scores = scale['internshipType']
+                type_scores = scale['internship_type']
                 type_score = type_scores.get(scale_key, 0)
                 score_breakdown['internship_type'] = type_score
                 score += type_score
@@ -445,7 +445,7 @@ def process_data(file_name: str, scale: dict = None):
                 location = record['location']
                 
                 # Look up in cost of living tiers
-                cost_of_living = scale['costOfLiving']
+                cost_of_living = scale['cost_of_living']
                 for tier_name, tier_states in cost_of_living.items():
                     if location in tier_states:
                         location_score = tier_states[location]

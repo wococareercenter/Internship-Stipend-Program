@@ -1,16 +1,11 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/next"
-    },
-    {
-      "src": "backend/api/index.py",
-      "use": "@vercel/python"
+  "functions": {
+    "backend/api/index.py": {
+      "runtime": "python3.9"
     }
-  ],
+  },
   "env": {
-    "FASTAPI_URL": "https://your-project-name.vercel.app"
+    "FASTAPI_URL": "https://internship-stipend-program.vercel.app"
   }
 } 

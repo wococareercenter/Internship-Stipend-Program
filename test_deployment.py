@@ -40,7 +40,7 @@ def test_endpoints(base_url):
 
 if __name__ == "__main__":
     # Replace with your actual Vercel URL
-    base_url = "https://your-project-name.vercel.app"
+    base_url = "internship-stipend-program.vercel.app"  # Update this with your actual Vercel domain
     
     print("Testing FastAPI deployment...")
     print(f"Base URL: {base_url}")

@@ -14,6 +14,12 @@ export default function Upload() {
     const [isMounted, setIsMounted] = useState(false);
     const fileInputRef = useRef(null);
 
+    // Base URL for API calls
+    let baseUrl = "https://internship-stipend-program.vercel.app";
+    if (process.env.NODE_ENV === "development") {
+        baseUrl = "http://localhost:3000";
+    }
+
     useEffect(() => {
         setIsMounted(true);
     }, []);
@@ -111,13 +117,15 @@ export default function Upload() {
         formData.append("file", file);
 
         try {
-            const response = await fetch("/api/upload", {
+            const response = await fetch(`${baseUrl}/api/upload`, {
                 method: "POST",
                 body: formData,
             });
 
             if (!response.ok) {
-                throw new Error("Upload failed");
+                throw new Error(`Upload failed. 
+                    Server returned status code: ${response.status}. 
+                    Please try uploading the file again or contact support if the issue persists.`);
             }
 
             const data = await response.json();

@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "fastapi-dev": "cd ../backend && pip3 install -r requirements.txt && python3 -m uvicorn app.main:app --reload",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "fastapi-dev": "cd ../backend && pip3 install -r requirements.txt && python3 -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000"
+    "lint": "next lint"
   },
   "dependencies": {
     "formidable": "^3.5.4",

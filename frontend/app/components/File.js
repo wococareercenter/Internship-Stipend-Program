@@ -12,6 +12,11 @@ export default function File() {
     const [successMessage, setSuccessMessage] = useState("");
     const [isMounted, setIsMounted] = useState(false);
 
+    let baseUrl = "https://internship-stipend-program.vercel.app";
+    if (process.env.NODE_ENV === "development") {
+        baseUrl = "http://localhost:3000";
+    }
+
     useEffect(() => {
         setIsMounted(true);
         fetchCurrentFile();
@@ -35,7 +40,7 @@ export default function File() {
         setError("");
         
         try {
-            const response = await fetch('/api/file');
+            const response = await fetch(`${baseUrl}/api/file`);
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.detail || errorData.error || `HTTP ${response.status}: ${response.statusText}`);
@@ -57,7 +62,7 @@ export default function File() {
         setError("");
         
         try {
-            const response = await fetch('/api/file');
+            const response = await fetch(`${baseUrl}/api/file`);
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.detail || errorData.error || `HTTP ${response.status}: ${response.statusText}`);

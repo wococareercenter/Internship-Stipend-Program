@@ -10,6 +10,11 @@ export default function Result() {
     const [error, setError] = useState(null);
     const [openStudents, setOpenStudents] = useState(new Set());
 
+    let baseUrl = "https://internship-stipend-program.vercel.app";
+    if (process.env.NODE_ENV === "development") {
+        baseUrl = "http://localhost:3000";
+    }
+
     // Function to format state names with spaces for display
     const formatStateName = (stateName) => {
         if (!stateName || stateName === 'N/A' || stateName === 'Unknown') {
@@ -51,7 +56,7 @@ export default function Result() {
             
             // First, get the current file info
             // console.log("Fetching file info...");
-            const fileResponse = await fetch('/api/file');
+            const fileResponse = await fetch(`${baseUrl}/api/file`);
             const fileData = await fileResponse.json();
             // console.log("File data:", fileData);
             
@@ -63,7 +68,7 @@ export default function Result() {
             
             // Now extract data from the uploaded file
             // console.log("Extracting data from file:", fileData.file.name);
-            const extractResponse = await fetch('/api/extract', {
+            const extractResponse = await fetch(`${baseUrl}/api/extract`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -75,7 +80,10 @@ export default function Result() {
             });
             
             if (!extractResponse.ok) {
-                throw new Error(`HTTP error! status: ${extractResponse.status}`);
+                throw new Error(`Failed to extract data from file. 
+                    Check the column names or file format. 
+                    Server returned status code: ${extractResponse.status}. 
+                    Please try uploading the file again or contact support if the issue persists.`);
             }
             
             const data = await extractResponse.json();

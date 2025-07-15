@@ -24,7 +24,11 @@ export default function Scale() {
     const [isMounted, setIsMounted] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
 
-
+    // Base URL for API calls
+    let baseUrl = "https://internship-stipend-program.vercel.app";
+    if (process.env.NODE_ENV === "development") {
+        baseUrl = "http://localhost:3000";
+    }
 
     // Input Scale variable and default value
     const [fafsaScale, setFafsaScale] = useState({
@@ -223,7 +227,7 @@ export default function Scale() {
         updateScale(currentScale);
 
         try {
-            const response = await fetch("/api/scale", {
+            const response = await fetch(`${baseUrl}/api/scale`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -324,7 +328,7 @@ export default function Scale() {
         updateScale(currentScale);
 
         try {
-            const response = await fetch("/api/scale", {
+            const response = await fetch(`${baseUrl}/api/scale`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -426,10 +430,10 @@ export default function Scale() {
                                     <div className="flex flex-row gap-4 justify-between items-center">
                                         <label htmlFor="Very High Need (VHN"> Very High Need (VHN)</label>
                                         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5" 
-                                            value={fafsaScale.veryHighNeed} 
+                                            value={fafsaScale.very_high_need} 
                                             onChange={(e) => setFafsaScale({
                                                 ...fafsaScale, // Default value
-                                                veryHighNeed: parseInt(e.target.value) || 0 // New value
+                                                very_high_need: parseInt(e.target.value) || 0 // New value
                                             })} 
                                         />
                                     </div>
@@ -437,10 +441,10 @@ export default function Scale() {
                                     <div className="flex flex-row gap-4 justify-between items-center">
                                         <label htmlFor="FAFSA">High Need (HN)</label>
                                         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" 
-                                            value={fafsaScale.highNeed} 
+                                            value={fafsaScale.high_need} 
                                             onChange={(e) => setFafsaScale({
                                                 ...fafsaScale, // Default value
-                                                highNeed: parseInt(e.target.value) || 0 // New value
+                                                high_need: parseInt(e.target.value) || 0 // New value
                                             })} 
                                         />
                                     </div>
@@ -448,10 +452,10 @@ export default function Scale() {
                                     <div className="flex flex-row gap-4 justify-between items-center">
                                         <label htmlFor="FAFSA">Moderate Need (MH)</label>
                                         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="3" min="0" max="5" 
-                                            value={fafsaScale.moderateNeed} 
+                                            value={fafsaScale.moderate_need} 
                                             onChange={(e) => setFafsaScale({
                                                 ...fafsaScale, // Default value
-                                                moderateNeed: parseInt(e.target.value) || 0 // New value
+                                                moderate_need: parseInt(e.target.value) || 0 // New value
                                             })} 
                                         />
                                     </div>
@@ -459,10 +463,10 @@ export default function Scale() {
                                     <div className="flex flex-row gap-4 justify-between items-center">
                                         <label htmlFor="FAFSA">Low Need (LN)</label>
                                         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="2" min="0" max="5" 
-                                            value={fafsaScale.lowNeed} 
+                                            value={fafsaScale.low_need} 
                                             onChange={(e) => setFafsaScale({
                                                 ...fafsaScale, // Default value
-                                                lowNeed: parseInt(e.target.value) || 0 // New value
+                                                low_need: parseInt(e.target.value) || 0 // New value
                                             })} 
                                         />
                                     </div>
@@ -470,10 +474,10 @@ export default function Scale() {
                                     <div className="flex flex-row gap-4 justify-between items-center">
                                         <label htmlFor="FAFSA">No Need (LN)</label>
                                         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="0" min="0" max="5" 
-                                            value={fafsaScale.noNeed} 
+                                            value={fafsaScale.no_need} 
                                             onChange={(e) => setFafsaScale({
                                                 ...fafsaScale, // Default value
-                                                noNeed: parseInt(e.target.value) || 0 // New value
+                                                no_need: parseInt(e.target.value) || 0 // New value
                                             })} 
                                         />
                                     </div>
@@ -513,10 +517,10 @@ export default function Scale() {
                                     <div className="flex flex-row gap-4 justify-between items-center">
                                         <label htmlFor="Internship Type">In-Person</label>
                                         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5"
-                                            value={internshipType.inPerson}
+                                            value={internshipType.in_person}
                                             onChange={(e) => setInternshipType({
                                                 ...internshipType, // Default value
-                                                inPerson: parseInt(e.target.value) || 0 // New value
+                                                in_person: parseInt(e.target.value) || 0 // New value
                                             })} 
                                         />
                                     </div>

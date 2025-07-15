@@ -11,6 +11,6 @@
     }
   ],
   "env": {
-    "FASTAPI_URL": "https://internship-stipend-program.vercel.app"
+    "FASTAPI_URL": "https://your-project-name.vercel.app"
   }
 } 

@@ -227,12 +227,12 @@ def clean_location_column(df):
     for loc in locations:
         if loc in location_cache:
             location_mapping[loc] = location_cache[loc]
-            print(f"'{loc}' -> '{location_cache[loc]}' (from cache)")
+            # print(f"'{loc}' -> '{location_cache[loc]}' (from cache)")
         else:
             locations_to_clean.append(loc)
     
     if locations_to_clean:
-        print(f"Cleaning {len(locations_to_clean)} new unique locations...")
+        # print(f"Cleaning {len(locations_to_clean)} new unique locations...")
         
         with ThreadPoolExecutor(max_workers=5) as executor:
             futures = {executor.submit(get_location, loc): loc for loc in locations_to_clean}
@@ -243,9 +243,10 @@ def clean_location_column(df):
                     cleaned_loc = future.result()
                     location_mapping[original_loc] = cleaned_loc
                     location_cache[original_loc] = cleaned_loc  # Store in cache
-                    print(f"'{original_loc}' -> '{cleaned_loc}' (new)")
+                    # print(f"'{original_loc}' -> '{cleaned_loc}' (new)")
+                    # print("...")
                 except Exception as e:
-                    print(f"Error processing '{original_loc}': {e}")
+                    # print(f"Error processing '{original_loc}': {e}")
                     location_mapping[original_loc] = "Unknown"
                     location_cache[original_loc] = "Unknown"  # Store in cache
     else:

@@ -28,11 +28,11 @@ export default function Scale() {
 
     // Input Scale variable and default value
     const [fafsaScale, setFafsaScale] = useState({
-        veryHighNeed: 5,
-        highNeed: 4,
-        moderateNeed: 3,
-        lowNeed: 2,
-        noNeed: 0,
+        very_high_need: 5,
+        high_need: 4,
+        moderate_need: 3,
+        low_need: 2,
+        no_need: 0,
     });
 
     // Input Paid or Unpaid variable and default value
@@ -43,7 +43,7 @@ export default function Scale() {
 
     // Input In-Person or Remote variable and default value
     const [internshipType, setInternshipType] = useState({
-        inPerson: 5,
+        in_person: 5,
         hybrid: 4,
         virtual: 0,
     });
@@ -174,18 +174,18 @@ export default function Scale() {
     // Function to reset all scales to default values
     const handleReset = async () => {
         setFafsaScale({
-            veryHighNeed: 5,
-            highNeed: 4,
-            moderateNeed: 3,
-            lowNeed: 2,
-            noNeed: 0,
+            very_high_need: 5,
+            high_need: 4,
+            moderate_need: 3,
+            low_need: 2,
+            no_need: 0,
         });
         setPaid({
             paid: 4,
             unpaid: 5,
         });
         setInternshipType({
-            inPerson: 5,
+            in_person: 5,
             hybrid: 4,
             virtual: 0,
         });
@@ -202,15 +202,15 @@ export default function Scale() {
         // Call handleSubmit without event parameter
         const currentScale = {
             fafsa_scale: {
-                very_high_need: fafsaScale.veryHighNeed,
-                high_need: fafsaScale.highNeed,
-                moderate_need: fafsaScale.moderateNeed,
-                low_need: fafsaScale.lowNeed,
-                no_need: fafsaScale.noNeed
+                very_high_need: fafsaScale.very_high_need,
+                high_need: fafsaScale.high_need,
+                moderate_need: fafsaScale.moderate_need,
+                low_need: fafsaScale.low_need,
+                no_need: fafsaScale.no_need
             },
             paid: paid,
             internship_type: {
-                in_person: internshipType.inPerson,
+                in_person: internshipType.in_person,
                 hybrid: internshipType.hybrid,
                 virtual: internshipType.virtual
             },
@@ -303,15 +303,15 @@ export default function Scale() {
 
         const currentScale = {
             fafsa_scale: {
-                very_high_need: fafsaScale.veryHighNeed,
-                high_need: fafsaScale.highNeed,
-                moderate_need: fafsaScale.moderateNeed,
-                low_need: fafsaScale.lowNeed,
-                no_need: fafsaScale.noNeed
+                very_high_need: fafsaScale.very_high_need,
+                high_need: fafsaScale.high_need,
+                moderate_need: fafsaScale.moderate_need,
+                low_need: fafsaScale.low_need,
+                no_need: fafsaScale.no_need
             },
             paid: paid,
             internship_type: {
-                in_person: internshipType.inPerson,
+                in_person: internshipType.in_person,
                 hybrid: internshipType.hybrid,
                 virtual: internshipType.virtual
             },

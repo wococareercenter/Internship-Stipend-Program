@@ -3,20 +3,17 @@
   "builds": [
     {
       "src": "frontend/package.json",
-      "use": "@vercel/next",
-      "config": {
-        "distDir": ".next"
-      }
+      "use": "@vercel/next"
     },
     {
-      "src": "api/index.py",
-      "use": "@vercel/python"
+      "src": "index.py",
+      "use": "@vercel/python@3.1.0"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/index.py"
+      "dest": "/index.py"
     },
     {
       "src": "/(.*)",

@@ -1,5 +1,6 @@
-from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi import FastAPI, UploadFile, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import os
 import time
@@ -19,6 +20,7 @@ origins = [
     "http://127.0.0.1:3000",
     "https://your-project-name.vercel.app",  # Add your Vercel domain
     "https://*.vercel.app",  # Allow all Vercel subdomains
+    "*"  # Allow all origins for development - remove this in production
 ]
 
 app.add_middleware(
@@ -29,10 +31,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add global exception handler to ensure JSON responses
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"error": str(exc), "detail": "Internal server error"}
+    )
+
 ### ROOT ENDPOINT ###
 @app.get("/")
 async def root():
-    return {"message": "ISP Platform is running!"}
+    return {"message": "ISP Platform is running!", "status": "healthy"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
 ### SCALE ENDPOINT ###
 # Data model for SCALE endpoint
@@ -69,7 +83,12 @@ async def get_file():
     Get the current uploaded file info and content
     """
     try:
-        uploads_dir = "uploads"
+        # For Vercel deployment, use /tmp directory which is writable
+        if os.environ.get('VERCEL'):
+            uploads_dir = "/tmp/uploads"
+        else:
+            uploads_dir = "uploads"
+            
         if not os.path.exists(uploads_dir):
             return {"file": None, "content": None}
         
@@ -127,11 +146,20 @@ async def upload_file(file: UploadFile):
                 status_code=400,
                 detail=f"File size too large."
             )
+        # For Vercel deployment, use /tmp directory which is writable
+        if os.environ.get('VERCEL'):
+            uploads_dir = "/tmp/uploads"
+        else:
+            uploads_dir = "uploads"
+            
+        # Create uploads directory if it doesn't exist
+        if not os.path.exists(uploads_dir):
+            os.makedirs(uploads_dir)
+            
         # Use original filename (will replace if exists)
-        file_path = os.path.join("uploads", file.filename)
+        file_path = os.path.join(uploads_dir, file.filename)
 
         # Delete any existing files in uploads directory
-        uploads_dir = "uploads"
         if os.path.exists(uploads_dir):
             for existing_file in os.listdir(uploads_dir):
                 existing_file_path = os.path.join(uploads_dir, existing_file)
@@ -320,8 +348,14 @@ def process_data(file_name: str, scale: dict = None):
         columns = csv_format["columns"]
         renamed_columns = csv_format["renamed_columns"]
 
+        # For Vercel deployment, use /tmp directory which is writable
+        if os.environ.get('VERCEL'):
+            uploads_dir = "/tmp/uploads"
+        else:
+            uploads_dir = "uploads"
+            
         # Load the CSV file first to see what columns exist
-        df = pd.read_csv(f"uploads/{file_name}").dropna(how='all')
+        df = pd.read_csv(f"{uploads_dir}/{file_name}").dropna(how='all')
         
         # Clean column names and renamed columns (strip whitespace and convert to lowercase)
         df.columns = df.columns.str.strip().str.lower()

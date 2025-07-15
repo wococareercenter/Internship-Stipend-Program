@@ -18,6 +18,10 @@ const nextConfig = {
           },
         ];
       },
+    // Add experimental features for better serverless support
+    experimental: {
+        serverComponentsExternalPackages: ['pandas'],
+    },
 };
 
 export default nextConfig;

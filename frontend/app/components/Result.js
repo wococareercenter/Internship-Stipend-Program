@@ -47,7 +47,7 @@ export default function Result() {
         
         try {
             // Add artificial delay for testing loading state
-            await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay
+            await new Promise(resolve => setTimeout(resolve, 1000)); // 3 second delay
             
             // First, get the current file info
             // console.log("Fetching file info...");

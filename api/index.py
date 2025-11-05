@@ -18,7 +18,7 @@ location_cache = {}
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://your-project-name.vercel.app",  # Add your Vercel domain
+    "https://internship-stipend-program.vercel.app/",  # Add your Vercel domain
     "https://*.vercel.app",  # Allow all Vercel subdomains
     "*"  # Allow all origins for development - remove this in production
 ]
@@ -77,7 +77,7 @@ async def clear_cache():
     return {"message": f"Cache cleared. Removed {cache_size} cached locations."}
 
 ### FILE ENDPOINT ###
-@app.get("/api/file")
+@app.get("/api/files")
 async def get_file():
     """
     Get the current uploaded file info and content

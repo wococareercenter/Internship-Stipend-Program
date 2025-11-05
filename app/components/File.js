@@ -40,7 +40,7 @@ export default function File() {
         setError("");
         
         try {
-            const response = await fetch(`${baseUrl}/api/file`);
+            const response = await fetch(`${baseUrl}/api/files`);
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.detail || errorData.error || `HTTP ${response.status}: ${response.statusText}`);
@@ -62,7 +62,7 @@ export default function File() {
         setError("");
         
         try {
-            const response = await fetch(`${baseUrl}/api/file`);
+            const response = await fetch(`${baseUrl}/api/files`);
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.detail || errorData.error || `HTTP ${response.status}: ${response.statusText}`);

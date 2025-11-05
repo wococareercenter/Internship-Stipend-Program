@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/**/*.py": {
-      "runtime": "python3.11"
-    }
-  },
   "env": {
     "FASTAPI_URL": "https://internship-stipend-program.vercel.app"
   }

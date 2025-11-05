@@ -1,15 +1,22 @@
 {
-  "name": "isp-platform-fullstack",
-  "version": "1.0.0",
-  "description": "ISP Platform - Full Stack with Next.js and FastAPI",
+  "name": "isp-platform",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
-    "dev:frontend": "cd frontend && npm run dev",
-    "dev:backend": "cd backend && python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000",
-    "build": "cd frontend && npm install && npm run build",
-    "start": "cd frontend && npm start"
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "formidable": "^3.5.4",
+    "next": "15.3.5",
+    "react": "^19.0.0",
+    "react-csv-to-table": "^0.0.1",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "@tailwindcss/postcss": "^4",
+    "tailwindcss": "^4"
   }
-} 
+}

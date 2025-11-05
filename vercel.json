@@ -4,10 +4,6 @@
     {
       "src": "frontend/package.json",
       "use": "@vercel/next"
-    },
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python@3.0.0"
     }
   ],
   "routes": [
@@ -21,7 +17,9 @@
     }
   ],
   "functions": {
-    "api/**/*.py": { "runtime": "python3.11" }
+    "api/**/*.py": {
+      "runtime": "python3.10"
+    }
   },
   "env": {
     "FASTAPI_URL": "https://internship-stipend-program.vercel.app"

@@ -24,15 +24,21 @@ export default function Scale() {
     const [isMounted, setIsMounted] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
 
-
+    // Base URL for API calls
+    // Use relative URLs in production (empty string = same origin)
+    // This works correctly on Vercel and avoids hardcoded domain issues
+    let baseUrl = "";
+    if (process.env.NODE_ENV === "development") {
+        baseUrl = "http://localhost:3000";
+    }
 
     // Input Scale variable and default value
     const [fafsaScale, setFafsaScale] = useState({
-        veryHighNeed: 5,
-        highNeed: 4,
-        moderateNeed: 3,
-        lowNeed: 2,
-        noNeed: 0,
+        very_high_need: 5,
+        high_need: 4,
+        moderate_need: 3,
+        low_need: 2,
+        no_need: 0,
     });
 
     // Input Paid or Unpaid variable and default value
@@ -43,7 +49,7 @@ export default function Scale() {
 
     // Input In-Person or Remote variable and default value
     const [internshipType, setInternshipType] = useState({
-        inPerson: 5,
+        in_person: 5,
         hybrid: 4,
         virtual: 0,
     });
@@ -174,18 +180,18 @@ export default function Scale() {
     // Function to reset all scales to default values
     const handleReset = async () => {
         setFafsaScale({
-            veryHighNeed: 5,
-            highNeed: 4,
-            moderateNeed: 3,
-            lowNeed: 2,
-            noNeed: 0,
+            very_high_need: 5,
+            high_need: 4,
+            moderate_need: 3,
+            low_need: 2,
+            no_need: 0,
         });
         setPaid({
             paid: 4,
             unpaid: 5,
         });
         setInternshipType({
-            inPerson: 5,
+            in_person: 5,
             hybrid: 4,
             virtual: 0,
         });
@@ -201,9 +207,19 @@ export default function Scale() {
 
         // Call handleSubmit without event parameter
         const currentScale = {
-            fafsa_scale: fafsaScale,
+            fafsa_scale: {
+                very_high_need: fafsaScale.very_high_need,
+                high_need: fafsaScale.high_need,
+                moderate_need: fafsaScale.moderate_need,
+                low_need: fafsaScale.low_need,
+                no_need: fafsaScale.no_need
+            },
             paid: paid,
-            internship_type: internshipType,
+            internship_type: {
+                in_person: internshipType.in_person,
+                hybrid: internshipType.hybrid,
+                virtual: internshipType.virtual
+            },
             cost_of_living: costOfLiving
         };
 
@@ -213,7 +229,7 @@ export default function Scale() {
         updateScale(currentScale);
 
         try {
-            const response = await fetch("http://localhost:8000/api/scale", {
+            const response = await fetch(`${baseUrl}/api/scale`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -292,9 +308,19 @@ export default function Scale() {
         setShowCostOfLivingInput3(false);
 
         const currentScale = {
-            fafsa_scale: fafsaScale,
+            fafsa_scale: {
+                very_high_need: fafsaScale.very_high_need,
+                high_need: fafsaScale.high_need,
+                moderate_need: fafsaScale.moderate_need,
+                low_need: fafsaScale.low_need,
+                no_need: fafsaScale.no_need
+            },
             paid: paid,
-            internship_type: internshipType,
+            internship_type: {
+                in_person: internshipType.in_person,
+                hybrid: internshipType.hybrid,
+                virtual: internshipType.virtual
+            },
             cost_of_living: costOfLiving
         };
 
@@ -304,7 +330,7 @@ export default function Scale() {
         updateScale(currentScale);
 
         try {
-            const response = await fetch("http://localhost:8000/api/scale", {
+            const response = await fetch(`${baseUrl}/api/scale`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -406,10 +432,10 @@ export default function Scale() {
                                     <div className="flex flex-row gap-4 justify-between items-center">
                                         <label htmlFor="Very High Need (VHN"> Very High Need (VHN)</label>
                                         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5" 
-                                            value={fafsaScale.veryHighNeed} 
+                                            value={fafsaScale.very_high_need} 
                                             onChange={(e) => setFafsaScale({
                                                 ...fafsaScale, // Default value
-                                                veryHighNeed: parseInt(e.target.value) || 0 // New value
+                                                very_high_need: parseInt(e.target.value) || 0 // New value
                                             })} 
                                         />
                                     </div>
@@ -417,10 +443,10 @@ export default function Scale() {
                                     <div className="flex flex-row gap-4 justify-between items-center">
                                         <label htmlFor="FAFSA">High Need (HN)</label>
                                         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" 
-                                            value={fafsaScale.highNeed} 
+                                            value={fafsaScale.high_need} 
                                             onChange={(e) => setFafsaScale({
                                                 ...fafsaScale, // Default value
-                                                highNeed: parseInt(e.target.value) || 0 // New value
+                                                high_need: parseInt(e.target.value) || 0 // New value
                                             })} 
                                         />
                                     </div>
@@ -428,10 +454,10 @@ export default function Scale() {
                                     <div className="flex flex-row gap-4 justify-between items-center">
                                         <label htmlFor="FAFSA">Moderate Need (MH)</label>
                                         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="3" min="0" max="5" 
-                                            value={fafsaScale.moderateNeed} 
+                                            value={fafsaScale.moderate_need} 
                                             onChange={(e) => setFafsaScale({
                                                 ...fafsaScale, // Default value
-                                                moderateNeed: parseInt(e.target.value) || 0 // New value
+                                                moderate_need: parseInt(e.target.value) || 0 // New value
                                             })} 
                                         />
                                     </div>
@@ -439,10 +465,10 @@ export default function Scale() {
                                     <div className="flex flex-row gap-4 justify-between items-center">
                                         <label htmlFor="FAFSA">Low Need (LN)</label>
                                         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="2" min="0" max="5" 
-                                            value={fafsaScale.lowNeed} 
+                                            value={fafsaScale.low_need} 
                                             onChange={(e) => setFafsaScale({
                                                 ...fafsaScale, // Default value
-                                                lowNeed: parseInt(e.target.value) || 0 // New value
+                                                low_need: parseInt(e.target.value) || 0 // New value
                                             })} 
                                         />
                                     </div>
@@ -450,10 +476,10 @@ export default function Scale() {
                                     <div className="flex flex-row gap-4 justify-between items-center">
                                         <label htmlFor="FAFSA">No Need (LN)</label>
                                         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="0" min="0" max="5" 
-                                            value={fafsaScale.noNeed} 
+                                            value={fafsaScale.no_need} 
                                             onChange={(e) => setFafsaScale({
                                                 ...fafsaScale, // Default value
-                                                noNeed: parseInt(e.target.value) || 0 // New value
+                                                no_need: parseInt(e.target.value) || 0 // New value
                                             })} 
                                         />
                                     </div>
@@ -493,10 +519,10 @@ export default function Scale() {
                                     <div className="flex flex-row gap-4 justify-between items-center">
                                         <label htmlFor="Internship Type">In-Person</label>
                                         <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5"
-                                            value={internshipType.inPerson}
+                                            value={internshipType.in_person}
                                             onChange={(e) => setInternshipType({
                                                 ...internshipType, // Default value
-                                                inPerson: parseInt(e.target.value) || 0 // New value
+                                                in_person: parseInt(e.target.value) || 0 // New value
                                             })} 
                                         />
                                     </div>

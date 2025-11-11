@@ -1,25 +1,25 @@
 "use client";
 import { createContext, useContext, useState } from 'react';
 
-// Default scale based on Scale.js
+// Default scale based on Scale.js - using snake_case keys to match backend expectations
 const defaultScale = {
-    fafsaScale: {
-        veryHighNeed: 5,
-        highNeed: 4,
-        moderateNeed: 3,
-        lowNeed: 2,
-        noNeed: 0
+    fafsa_scale: {
+        very_high_need: 5,
+        high_need: 4,
+        moderate_need: 3,
+        low_need: 2,
+        no_need: 0
     },
     paid: {
         paid: 4,
         unpaid: 5
     },
-    internshipType: {
-        inPerson: 5,
+    internship_type: {
+        in_person: 5,
         hybrid: 4,
         virtual: 0
     },
-    costOfLiving: {
+    cost_of_living: {
         tier1: {
             Mississippi: 1, Arkansas: 1, Missouri: 1, Michigan: 1,
             Tennessee: 1, Ohio: 1, Oklahoma: 1, Georgia: 1,

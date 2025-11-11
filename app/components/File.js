@@ -12,6 +12,13 @@ export default function File() {
     const [successMessage, setSuccessMessage] = useState("");
     const [isMounted, setIsMounted] = useState(false);
 
+    // Use relative URLs in production (empty string = same origin)
+    // This works correctly on Vercel and avoids hardcoded domain issues
+    let baseUrl = "";
+    if (process.env.NODE_ENV === "development") {
+        baseUrl = "http://localhost:3000";
+    }
+
     useEffect(() => {
         setIsMounted(true);
         fetchCurrentFile();
@@ -35,7 +42,7 @@ export default function File() {
         setError("");
         
         try {
-            const response = await fetch('http://localhost:8000/api/file');
+            const response = await fetch(`${baseUrl}/api/files`);
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.detail || errorData.error || `HTTP ${response.status}: ${response.statusText}`);
@@ -57,7 +64,7 @@ export default function File() {
         setError("");
         
         try {
-            const response = await fetch('http://localhost:8000/api/file');
+            const response = await fetch(`${baseUrl}/api/files`);
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.detail || errorData.error || `HTTP ${response.status}: ${response.statusText}`);

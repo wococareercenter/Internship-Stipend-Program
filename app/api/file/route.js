@@ -1,16 +1,38 @@
 import { NextResponse } from 'next/server';
 
-export async function GET() {
+// Export route config to ensure it's publicly accessible
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+// Handle CORS preflight requests
+export async function OPTIONS() {
+    return new NextResponse(null, {
+        status: 200,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+        },
+    });
+}
+
+export async function GET(request) {
     try {
         // Use relative URL in production, absolute in development
-        const fastApiUrl = process.env.NODE_ENV === 'production' 
-            ? '' // Relative URL - will use same origin
-            : (process.env.FASTAPI_URL || 'http://localhost:8000');
+        let apiPath;
         
-        // In production, FastAPI is accessible at /backend-api/api/* (FastAPI routes are at /api/*)
-        const apiPath = process.env.NODE_ENV === 'production' 
-            ? '/backend-api/api/file'
-            : `${fastApiUrl}/api/file`;
+        if (process.env.NODE_ENV === 'production') {
+            // In production, construct full URL from request headers
+            const headers = request.headers;
+            const host = headers.get('host') || headers.get('x-forwarded-host');
+            const protocol = headers.get('x-forwarded-proto') || 'https';
+            const baseUrl = `${protocol}://${host}`;
+            apiPath = `${baseUrl}/backend-api/api/file`;
+        } else {
+            // In development, use environment variable or default
+            const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
+            apiPath = `${fastApiUrl}/api/file`;
+        }
         
         const response = await fetch(apiPath, {
             method: 'GET',
@@ -30,27 +52,55 @@ export async function GET() {
             return NextResponse.json({ 
                 error: "Failed to fetch file",
                 details: errorData 
-            }, { status: response.status });
+            }, { 
+                status: response.status,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                }
+            });
         }
 
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
-            return NextResponse.json(data);
+            return NextResponse.json(data, {
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                }
+            });
         } else {
             const textData = await response.text();
             return NextResponse.json({ 
                 error: "Invalid response format from backend",
                 details: textData 
-            }, { status: 500 });
+            }, { 
+                status: 500,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                }
+            });
         }
 
     } catch (error) {
         console.error('File fetch error:', error);
+        console.error('Error stack:', error.stack);
         return NextResponse.json({ 
             error: "Failed to fetch file",
             details: error.message 
-        }, { status: 500 });
+        }, { 
+            status: 500,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type',
+            }
+        });
     }
 }
 

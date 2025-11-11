@@ -1,3 +1,17 @@
+/**
+ * File Upload API Route
+ * 
+ * Handles CSV file uploads with validation:
+ * - Validates file type (CSV, Excel)
+ * - Validates file size (max 10MB)
+ * - Stores files in uploads directory
+ * - Cleans up old files before storing new one
+ * 
+ * @route POST /api/upload
+ * @body FormData with 'file' field
+ * @returns {object} Upload confirmation with file metadata
+ */
+
 import { NextResponse } from 'next/server';
 import path from "path";
 import fs from 'fs';
@@ -7,7 +21,10 @@ import { writeFile, mkdir } from 'fs/promises';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// Handle CORS preflight requests
+/**
+ * Handle CORS preflight requests
+ * Allows cross-origin requests from the frontend
+ */
 export async function OPTIONS() {
     return new NextResponse(null, {
         status: 200,
@@ -19,12 +36,17 @@ export async function OPTIONS() {
     });
 }
 
+/**
+ * Main upload endpoint
+ * Handles file upload, validation, and storage
+ */
 export async function POST(request) {
     try {
-        // Get the file from the request
+        // Parse multipart form data to get uploaded file
         const formData = await request.formData();
         const file = formData.get('file');
         
+        // Validate file was provided
         if (!file) {
             return NextResponse.json({ 
                 error: "No file provided" 
@@ -38,7 +60,7 @@ export async function POST(request) {
             });
         }
 
-        // Validate file type
+        // Validate file type - only allow CSV and Excel files
         const allowedExtensions = ['.csv', '.xls', '.xlsx'];
         const fileName = file.name || '';
         const fileExtension = path.extname(fileName).toLowerCase();
@@ -56,7 +78,7 @@ export async function POST(request) {
             });
         }
 
-        // Validate file size
+        // Validate file size - maximum 10MB
         const maxSize = 10 * 1024 * 1024; // 10MB
         if (file.size > maxSize) {
             return NextResponse.json({ 
@@ -71,8 +93,8 @@ export async function POST(request) {
             });
         }
 
-        // Handle file storage directly - no need to proxy to FastAPI
-        // Determine uploads directory
+        // Determine uploads directory based on environment
+        // Vercel uses /tmp (ephemeral), local uses public/uploads
         const uploadsDir = process.env.VERCEL 
             ? '/tmp/uploads'
             : path.join(process.cwd(), 'public', 'uploads');
@@ -84,7 +106,7 @@ export async function POST(request) {
             // Directory might already exist, that's fine
         }
         
-        // Delete any existing files in uploads directory
+        // Clean up old files - only one file should exist at a time
         try {
             const files = await fs.promises.readdir(uploadsDir);
             for (const existingFile of files) {
@@ -98,14 +120,15 @@ export async function POST(request) {
             // Ignore errors when cleaning up
         }
         
-        // Read file buffer
+        // Read file buffer from uploaded file
         const fileBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(fileBuffer);
         
-        // Save file
+        // Save file to uploads directory
         const filePath = path.join(uploadsDir, file.name);
         await writeFile(filePath, buffer);
         
+        // Return success response with file metadata
         return NextResponse.json({ 
             message: "File uploaded successfully",
             file: {
@@ -122,8 +145,11 @@ export async function POST(request) {
         });
 
     } catch (error) {
+        // Log error for debugging
         console.error('Upload error:', error);
         console.error('Error stack:', error.stack);
+        
+        // Return error response
         return NextResponse.json({ 
             error: "Failed to upload file",
             details: error.message 

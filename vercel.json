@@ -1,13 +1,4 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "rewrites": [
-    {
-      "source": "/backend-api/(.*)",
-      "destination": "/api/index.py"
-    }
-  ],
-  "env": {
-    "FASTAPI_URL": "https://internship-stipend-program.vercel.app"
-  }
+  "buildCommand": "npm run build"
 }

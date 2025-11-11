@@ -224,7 +224,8 @@ export async function processData(fileName, scale = null) {
             }
             
             if (invalidValues.length > 0) {
-                warnings.push(`Invalid ${field} values: ${invalidValues.join(', ')}`);
+                // Format warning to match frontend expectation: "Invalid field_name values: [value1, value2, ...]"
+                warnings.push(`Invalid ${field} values: [${invalidValues.join(', ')}]`);
             }
         }
         

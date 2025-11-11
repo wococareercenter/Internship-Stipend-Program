@@ -77,7 +77,7 @@ async def clear_cache():
     return {"message": f"Cache cleared. Removed {cache_size} cached locations."}
 
 ### FILE ENDPOINT ###
-@app.get("/api/files")
+@app.get("/api/file")
 async def get_file():
     """
     Get the current uploaded file info and content

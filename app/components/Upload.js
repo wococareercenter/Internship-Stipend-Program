@@ -15,7 +15,7 @@ export default function Upload() {
     const fileInputRef = useRef(null);
 
     // Base URL for API calls
-    let baseUrl = "https://internship-stipend-program.vercel.app";
+    let baseUrl = "";
     if (process.env.NODE_ENV === "development") {
         baseUrl = "http://localhost:3000";
     }

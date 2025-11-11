@@ -56,7 +56,7 @@ export default function Result() {
             
             // First, get the current file info
             // console.log("Fetching file info...");
-            const fileResponse = await fetch(`${baseUrl}/api/files`);
+            const fileResponse = await fetch(`${baseUrl}/api/file`);
             const fileData = await fileResponse.json();
             // console.log("File data:", fileData);
             

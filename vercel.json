@@ -1,15 +1,13 @@
 {
-  "buildCommand": "npm run build",
-  "builds": [
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python"
+  "functions": {
+    "api/index.py": {
+      "runtime": "python3.12"
     }
-  ],
-  "routes": [
+  },
+  "rewrites": [
     {
-      "src": "/backend-api/(.*)",
-      "dest": "/api/index.py"
+      "source": "/backend-api/(.*)",
+      "destination": "/api/index.py"
     }
   ],
   "env": {

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import path from "path";
-import fs from "fs";
 
 export async function POST(request) {
     try {
@@ -34,26 +33,52 @@ export async function POST(request) {
         }
 
         // Forward the file to FastAPI backend
-        // Use relative URL in production, absolute in development
-        const fastApiUrl = process.env.NODE_ENV === 'production' 
-            ? '' // Relative URL - will use same origin
-            : (process.env.FASTAPI_URL || 'http://localhost:8000');
+        let apiPath;
         
-        // In production, FastAPI is accessible at /backend-api/api/* (FastAPI routes are at /api/*)
-        const apiPath = process.env.NODE_ENV === 'production' 
-            ? '/backend-api/api/upload'
-            : `${fastApiUrl}/api/upload`;
+        if (process.env.NODE_ENV === 'production') {
+            // In production, construct full URL from request headers
+            const headers = request.headers;
+            const host = headers.get('host') || headers.get('x-forwarded-host');
+            const protocol = headers.get('x-forwarded-proto') || 'https';
+            const baseUrl = `${protocol}://${host}`;
+            apiPath = `${baseUrl}/backend-api/api/upload`;
+            console.log('Production API path:', apiPath);
+        } else {
+            // In development, use environment variable or default
+            const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
+            apiPath = `${fastApiUrl}/api/upload`;
+            console.log('Development API path:', apiPath);
+        }
         
-        const fastApiFormData = new FormData();
-        fastApiFormData.append('file', file);
+        // Read file as array buffer for forwarding
+        const fileBuffer = await file.arrayBuffer();
+        
+        // Create a new FormData with the file buffer
+        const forwardFormData = new FormData();
+        
+        // Try to create a File object, fallback to Blob if File is not available
+        let fileToForward;
+        if (typeof File !== 'undefined') {
+            fileToForward = new File([fileBuffer], file.name, { type: file.type });
+        } else {
+            // Fallback: use Blob (which should be available in Next.js)
+            fileToForward = new Blob([fileBuffer], { type: file.type });
+        }
+        forwardFormData.append('file', fileToForward, file.name);
         
         const response = await fetch(apiPath, {
             method: 'POST',
-            body: fastApiFormData,
+            body: forwardFormData,
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
+            let errorData;
+            try {
+                errorData = await response.json();
+            } catch (e) {
+                errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+            }
+            console.error('Backend upload failed:', errorData);
             return NextResponse.json({ 
                 error: "Backend upload failed",
                 details: errorData 
@@ -69,6 +94,7 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('Upload error:', error);
+        console.error('Error stack:', error.stack);
         return NextResponse.json({ 
             error: "Failed to upload file",
             details: error.message 

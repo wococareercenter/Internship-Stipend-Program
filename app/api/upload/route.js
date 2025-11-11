@@ -1,6 +1,22 @@
 import { NextResponse } from 'next/server';
 import path from "path";
 
+// Export route config to ensure it's publicly accessible
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+// Handle CORS preflight requests
+export async function OPTIONS() {
+    return new NextResponse(null, {
+        status: 200,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+        },
+    });
+}
+
 export async function POST(request) {
     try {
         // Get the file from the request
@@ -10,7 +26,14 @@ export async function POST(request) {
         if (!file) {
             return NextResponse.json({ 
                 error: "No file provided" 
-            }, { status: 400 });
+            }, { 
+                status: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                }
+            });
         }
 
         // Validate file type
@@ -21,7 +44,14 @@ export async function POST(request) {
         if (!allowedExtensions.includes(fileExtension)) {
             return NextResponse.json({ 
                 error: "Invalid file type. Only CSV and Excel files are allowed." 
-            }, { status: 400 });
+            }, { 
+                status: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                }
+            });
         }
 
         // Validate file size
@@ -29,7 +59,14 @@ export async function POST(request) {
         if (file.size > maxSize) {
             return NextResponse.json({ 
                 error: "File size must be less than 10MB" 
-            }, { status: 400 });
+            }, { 
+                status: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                }
+            });
         }
 
         // Forward the file to FastAPI backend
@@ -82,7 +119,14 @@ export async function POST(request) {
             return NextResponse.json({ 
                 error: "Backend upload failed",
                 details: errorData 
-            }, { status: response.status });
+            }, { 
+                status: response.status,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                }
+            });
         }
 
         const data = await response.json();
@@ -90,6 +134,12 @@ export async function POST(request) {
         return NextResponse.json({ 
             message: "File uploaded successfully",
             file: data.file
+        }, {
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type',
+            }
         });
 
     } catch (error) {
@@ -98,6 +148,13 @@ export async function POST(request) {
         return NextResponse.json({ 
             error: "Failed to upload file",
             details: error.message 
-        }, { status: 500 });
+        }, { 
+            status: 500,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type',
+            }
+        });
     }
 }

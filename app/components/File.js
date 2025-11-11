@@ -12,7 +12,9 @@ export default function File() {
     const [successMessage, setSuccessMessage] = useState("");
     const [isMounted, setIsMounted] = useState(false);
 
-    let baseUrl = "https://internship-stipend-program.vercel.app";
+    // Use relative URLs in production (empty string = same origin)
+    // This works correctly on Vercel and avoids hardcoded domain issues
+    let baseUrl = "";
     if (process.env.NODE_ENV === "development") {
         baseUrl = "http://localhost:3000";
     }

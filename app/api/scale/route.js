@@ -17,6 +17,7 @@ export async function OPTIONS() {
 }
 
 export async function POST(request) {
+    console.log('POST /api/scale called');
     try {
         const body = await request.json();
         

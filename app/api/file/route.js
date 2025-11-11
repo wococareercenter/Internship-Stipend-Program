@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 
 // Export route config to ensure it's publicly accessible
 export const runtime = 'nodejs';
@@ -18,74 +20,70 @@ export async function OPTIONS() {
 
 export async function GET(request) {
     try {
-        // Use relative URL in production, absolute in development
-        let apiPath;
+        // Determine uploads directory
+        const uploadsDir = process.env.VERCEL 
+            ? '/tmp/uploads'
+            : path.join(process.cwd(), 'public', 'uploads');
         
-        if (process.env.NODE_ENV === 'production') {
-            // In production, construct full URL from request headers
-            const headers = request.headers;
-            const host = headers.get('host') || headers.get('x-forwarded-host');
-            const protocol = headers.get('x-forwarded-proto') || 'https';
-            const baseUrl = `${protocol}://${host}`;
-            apiPath = `${baseUrl}/backend-api/api/file`;
-        } else {
-            // In development, use environment variable or default
-            const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
-            apiPath = `${fastApiUrl}/api/file`;
+        if (!fs.existsSync(uploadsDir)) {
+            return NextResponse.json({ 
+                file: null, 
+                content: null 
+            }, {
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                }
+            });
         }
         
-        const response = await fetch(apiPath, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-
-        if (!response.ok) {
-            let errorData;
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                errorData = await response.json();
-            } else {
-                errorData = await response.text();
+        // Check if there's a file in uploads directory
+        const files = await fs.promises.readdir(uploadsDir);
+        for (const filename of files) {
+            const filePath = path.join(uploadsDir, filename);
+            const stat = await fs.promises.stat(filePath);
+            
+            if (stat.isFile()) {
+                // Get file content if it's a CSV
+                let content = null;
+                const fileExtension = path.extname(filename).toLowerCase();
+                if (fileExtension === '.csv') {
+                    try {
+                        content = await fs.promises.readFile(filePath, 'utf-8');
+                    } catch (err) {
+                        console.error(`Error reading file content: ${err}`);
+                    }
+                }
+                
+                return NextResponse.json({
+                    file: {
+                        name: filename,
+                        size: stat.size,
+                        uploadDate: new Date(stat.mtime).toISOString()
+                    },
+                    content: content
+                }, {
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+                        'Access-Control-Allow-Headers': 'Content-Type',
+                    }
+                });
             }
-            return NextResponse.json({ 
-                error: "Failed to fetch file",
-                details: errorData 
-            }, { 
-                status: response.status,
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                    'Access-Control-Allow-Headers': 'Content-Type',
-                }
-            });
         }
-
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            return NextResponse.json(data, {
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                    'Access-Control-Allow-Headers': 'Content-Type',
-                }
-            });
-        } else {
-            const textData = await response.text();
-            return NextResponse.json({ 
-                error: "Invalid response format from backend",
-                details: textData 
-            }, { 
-                status: 500,
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                    'Access-Control-Allow-Headers': 'Content-Type',
-                }
-            });
-        }
+        
+        // No file found
+        return NextResponse.json({ 
+            file: null, 
+            content: null 
+        }, {
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type',
+            }
+        });
 
     } catch (error) {
         console.error('File fetch error:', error);

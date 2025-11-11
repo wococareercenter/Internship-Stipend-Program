@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import path from "path";
+import fs from 'fs';
+import { writeFile, mkdir } from 'fs/promises';
 
 // Export route config to ensure it's publicly accessible
 export const runtime = 'nodejs';
@@ -69,71 +71,48 @@ export async function POST(request) {
             });
         }
 
-        // Forward the file to FastAPI backend
-        let apiPath;
+        // Handle file storage directly - no need to proxy to FastAPI
+        // Determine uploads directory
+        const uploadsDir = process.env.VERCEL 
+            ? '/tmp/uploads'
+            : path.join(process.cwd(), 'public', 'uploads');
         
-        if (process.env.NODE_ENV === 'production') {
-            // In production, construct full URL from request headers
-            const headers = request.headers;
-            const host = headers.get('host') || headers.get('x-forwarded-host');
-            const protocol = headers.get('x-forwarded-proto') || 'https';
-            const baseUrl = `${protocol}://${host}`;
-            apiPath = `${baseUrl}/backend-api/api/upload`;
-            console.log('Production API path:', apiPath);
-        } else {
-            // In development, use environment variable or default
-            const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
-            apiPath = `${fastApiUrl}/api/upload`;
-            console.log('Development API path:', apiPath);
+        // Create uploads directory if it doesn't exist
+        try {
+            await mkdir(uploadsDir, { recursive: true });
+        } catch (err) {
+            // Directory might already exist, that's fine
         }
         
-        // Read file as array buffer for forwarding
-        const fileBuffer = await file.arrayBuffer();
-        
-        // Create a new FormData with the file buffer
-        const forwardFormData = new FormData();
-        
-        // Try to create a File object, fallback to Blob if File is not available
-        let fileToForward;
-        if (typeof File !== 'undefined') {
-            fileToForward = new File([fileBuffer], file.name, { type: file.type });
-        } else {
-            // Fallback: use Blob (which should be available in Next.js)
-            fileToForward = new Blob([fileBuffer], { type: file.type });
-        }
-        forwardFormData.append('file', fileToForward, file.name);
-        
-        const response = await fetch(apiPath, {
-            method: 'POST',
-            body: forwardFormData,
-        });
-
-        if (!response.ok) {
-            let errorData;
-            try {
-                errorData = await response.json();
-            } catch (e) {
-                errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
-            }
-            console.error('Backend upload failed:', errorData);
-            return NextResponse.json({ 
-                error: "Backend upload failed",
-                details: errorData 
-            }, { 
-                status: response.status,
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-                    'Access-Control-Allow-Headers': 'Content-Type',
+        // Delete any existing files in uploads directory
+        try {
+            const files = await fs.promises.readdir(uploadsDir);
+            for (const existingFile of files) {
+                const filePath = path.join(uploadsDir, existingFile);
+                const stat = await fs.promises.stat(filePath);
+                if (stat.isFile()) {
+                    await fs.promises.unlink(filePath);
                 }
-            });
+            }
+        } catch (err) {
+            // Ignore errors when cleaning up
         }
-
-        const data = await response.json();
+        
+        // Read file buffer
+        const fileBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(fileBuffer);
+        
+        // Save file
+        const filePath = path.join(uploadsDir, file.name);
+        await writeFile(filePath, buffer);
         
         return NextResponse.json({ 
             message: "File uploaded successfully",
-            file: data.file
+            file: {
+                name: file.name,
+                original_name: file.name,
+                size: buffer.length,
+            }
         }, {
             headers: {
                 'Access-Control-Allow-Origin': '*',

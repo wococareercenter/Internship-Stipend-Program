@@ -1,4 +1,5 @@
 {
+  "buildCommand": "npm run build",
   "builds": [
     {
       "src": "api/index.py",
@@ -8,7 +9,7 @@
   "routes": [
     {
       "src": "/backend-api/(.*)",
-      "dest": "api/index.py"
+      "dest": "/api/index.py"
     }
   ],
   "env": {

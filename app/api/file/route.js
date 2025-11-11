@@ -1,3 +1,15 @@
+/**
+ * File Information API Route
+ * 
+ * Retrieves information about the currently uploaded file:
+ * - File name and size
+ * - Upload date
+ * - File content (for CSV files)
+ * 
+ * @route GET /api/file
+ * @returns {object} File metadata and content (if CSV)
+ */
+
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
@@ -6,7 +18,10 @@ import path from 'path';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// Handle CORS preflight requests
+/**
+ * Handle CORS preflight requests
+ * Allows cross-origin requests from the frontend
+ */
 export async function OPTIONS() {
     return new NextResponse(null, {
         status: 200,
@@ -18,13 +33,19 @@ export async function OPTIONS() {
     });
 }
 
+/**
+ * Get current uploaded file information
+ * Returns file metadata and content if available
+ */
 export async function GET(request) {
     try {
-        // Determine uploads directory
+        // Determine uploads directory based on environment
+        // Vercel uses /tmp (ephemeral), local uses public/uploads
         const uploadsDir = process.env.VERCEL 
             ? '/tmp/uploads'
             : path.join(process.cwd(), 'public', 'uploads');
         
+        // Return null if uploads directory doesn't exist
         if (!fs.existsSync(uploadsDir)) {
             return NextResponse.json({ 
                 file: null, 
@@ -45,7 +66,7 @@ export async function GET(request) {
             const stat = await fs.promises.stat(filePath);
             
             if (stat.isFile()) {
-                // Get file content if it's a CSV
+                // Get file content if it's a CSV (for preview purposes)
                 let content = null;
                 const fileExtension = path.extname(filename).toLowerCase();
                 if (fileExtension === '.csv') {
@@ -56,6 +77,7 @@ export async function GET(request) {
                     }
                 }
                 
+                // Return file metadata and content
                 return NextResponse.json({
                     file: {
                         name: filename,
@@ -73,7 +95,7 @@ export async function GET(request) {
             }
         }
         
-        // No file found
+        // No file found in uploads directory
         return NextResponse.json({ 
             file: null, 
             content: null 
@@ -86,8 +108,11 @@ export async function GET(request) {
         });
 
     } catch (error) {
+        // Log error for debugging
         console.error('File fetch error:', error);
         console.error('Error stack:', error.stack);
+        
+        // Return error response
         return NextResponse.json({ 
             error: "Failed to fetch file",
             details: error.message 

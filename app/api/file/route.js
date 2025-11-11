@@ -2,9 +2,17 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
     try {
-        const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
+        // Use relative URL in production, absolute in development
+        const fastApiUrl = process.env.NODE_ENV === 'production' 
+            ? '' // Relative URL - will use same origin
+            : (process.env.FASTAPI_URL || 'http://localhost:8000');
         
-        const response = await fetch(`${fastApiUrl}/api/file`, {
+        // In production, FastAPI is accessible at /backend-api/api/* (FastAPI routes are at /api/*)
+        const apiPath = process.env.NODE_ENV === 'production' 
+            ? '/backend-api/api/file'
+            : `${fastApiUrl}/api/file`;
+        
+        const response = await fetch(apiPath, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

@@ -34,12 +34,20 @@ export async function POST(request) {
         }
 
         // Forward the file to FastAPI backend
-        const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
+        // Use relative URL in production, absolute in development
+        const fastApiUrl = process.env.NODE_ENV === 'production' 
+            ? '' // Relative URL - will use same origin
+            : (process.env.FASTAPI_URL || 'http://localhost:8000');
+        
+        // In production, FastAPI is accessible at /backend-api/api/* (FastAPI routes are at /api/*)
+        const apiPath = process.env.NODE_ENV === 'production' 
+            ? '/backend-api/api/upload'
+            : `${fastApiUrl}/api/upload`;
         
         const fastApiFormData = new FormData();
         fastApiFormData.append('file', file);
         
-        const response = await fetch(`${fastApiUrl}/api/upload`, {
+        const response = await fetch(apiPath, {
             method: 'POST',
             body: fastApiFormData,
         });

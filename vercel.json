@@ -1,4 +1,16 @@
 {
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/backend-api/(.*)",
+      "dest": "api/index.py"
+    }
+  ],
   "env": {
     "FASTAPI_URL": "https://internship-stipend-program.vercel.app"
   }

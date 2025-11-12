@@ -443,73 +443,75 @@ export default function Scale( { onSave }) {
                         </div>
                     </div>
                     
-                    {/* Paid/Unpaid Details */}
-                    <div className="flex flex-col gap-3 border-1 border-black rounded-md p-3 w-full min-w-fit">
-                        <h3 className="text-lg font-bold text-center">Paid or Unpaid</h3>
-                        <hr className="border-1 border-black w-full" />
-                        <div className="flex flex-row justify-between items-center gap-4">
-                            <label htmlFor="Paid?">Paid</label>
-                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5"
-                                value={paid.paid}
-                                onChange={(e) => setPaid({
-                                    ...paid, // Default value
-                                    paid: parseInt(e.target.value) || 0 // New value
-                                })} 
-                            />
-                        </div>
-                        <hr className="border-0.5 border-zinc-300 w-full" />
-                        <div className="flex flex-row justify-between items-center gap-4">
-                            <label htmlFor="Paid?">Unpaid</label>
-                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5"
-                                value={paid.unpaid}
-                                onChange={(e) => setPaid({
-                                    ...paid, // Default value
-                                    unpaid: parseInt(e.target.value) || 0  // New value
-                                })} 
-                            />
-                        </div>
-                    </div>
-                    
-                    {/* Internship Type Details */}
-                    <div className="flex flex-col gap-3 border-1 border-black rounded-md p-3 w-full min-w-fit">
-                        <h3 className="text-lg font-bold text-center">In-Person or Remote</h3>
-                        <hr className="border-1 border-black w-full" />
-                        <div className="flex flex-row justify-between items-center gap-4">
-                            <label htmlFor="Internship Type">In-Person</label>
-                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5"
-                                value={internshipType.in_person}
-                                onChange={(e) => setInternshipType({
-                                    ...internshipType, // Default value
-                                    in_person: parseInt(e.target.value) || 0 // New value
-                                })} 
-                            />
-                        </div>
+                    {/* <div className="flex flex-col gap-4 w-full"> */}
+                        {/* Paid/Unpaid Details */}
+                        <div className="flex flex-col gap-3 border-1 border-black rounded-md p-3 w-full min-w-fit">
+                            <h3 className="text-lg font-bold text-center">Paid or Unpaid</h3>
+                            <hr className="border-1 border-black w-full" />
+                            <div className="flex flex-row justify-between items-center gap-4">
+                                <label htmlFor="Paid?">Paid</label>
+                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5"
+                                    value={paid.paid}
+                                    onChange={(e) => setPaid({
+                                        ...paid, // Default value
+                                        paid: parseInt(e.target.value) || 0 // New value
+                                    })} 
+                                />
+                            </div>
                             <hr className="border-0.5 border-zinc-300 w-full" />
-                        <div className="flex flex-row justify-between items-center gap-4">
-                            <label htmlFor="Internship Type">Hybrid</label>
-                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5"
-                                value={internshipType.hybrid}
-                                onChange={(e) => setInternshipType({
-                                    ...internshipType, // Default value
-                                    hybrid: parseInt(e.target.value) || 0 // New value
-                                })} 
-                            />
+                            <div className="flex flex-row justify-between items-center gap-4">
+                                <label htmlFor="Paid?">Unpaid</label>
+                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5"
+                                    value={paid.unpaid}
+                                    onChange={(e) => setPaid({
+                                        ...paid, // Default value
+                                        unpaid: parseInt(e.target.value) || 0  // New value
+                                    })} 
+                                />
+                            </div>
                         </div>
-                        <hr className="border-0.5 border-zinc-300 w-full" />
-                        <div className="flex flex-row justify-between items-center gap-4">
-                            <label htmlFor="Internship Type">Virtual</label>
-                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="0" min="0" max="5" 
-                                value={internshipType.virtual}
-                                onChange={(e) => setInternshipType({
-                                    ...internshipType, // Default value
-                                    virtual: parseInt(e.target.value) || 0 // New value
-                                })} 
-                            />
+                        
+                        {/* Internship Type Details */}
+                        <div className="flex flex-col gap-3 border-1 border-black rounded-md p-3 w-full min-w-fit">
+                            <h3 className="text-lg font-bold text-center">In-Person or Remote</h3>
+                            <hr className="border-1 border-black w-full" />
+                            <div className="flex flex-row justify-between items-center gap-4">
+                                <label htmlFor="Internship Type">In-Person</label>
+                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5"
+                                    value={internshipType.in_person}
+                                    onChange={(e) => setInternshipType({
+                                        ...internshipType, // Default value
+                                        in_person: parseInt(e.target.value) || 0 // New value
+                                    })} 
+                                />
+                            </div>
+                                <hr className="border-0.5 border-zinc-300 w-full" />
+                            <div className="flex flex-row justify-between items-center gap-4">
+                                <label htmlFor="Internship Type">Hybrid</label>
+                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5"
+                                    value={internshipType.hybrid}
+                                    onChange={(e) => setInternshipType({
+                                        ...internshipType, // Default value
+                                        hybrid: parseInt(e.target.value) || 0 // New value
+                                    })} 
+                                />
+                            </div>
+                            <hr className="border-0.5 border-zinc-300 w-full" />
+                            <div className="flex flex-row justify-between items-center gap-4">
+                                <label htmlFor="Internship Type">Virtual</label>
+                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="0" min="0" max="5" 
+                                    value={internshipType.virtual}
+                                    onChange={(e) => setInternshipType({
+                                        ...internshipType, // Default value
+                                        virtual: parseInt(e.target.value) || 0 // New value
+                                    })} 
+                                />
+                            </div>
                         </div>
-                    </div>
-                    
+                    {/* </div> */}
+
                     {/* Cost of Living Details */}
-                    <div className="flex flex-col gap-3 border-1 border-black rounded-md p-3 w-full min-w-fit">
+                    <div className="flex flex-col gap-3 border-1 border-black rounded-md p-3 w-full min-w-fit items-center justify-center">
                         <h3 className="text-lg font-bold text-center">Cost of Living</h3>
                         <hr className="border-1 border-black w-full" />
 

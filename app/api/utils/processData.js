@@ -214,6 +214,37 @@ export function cleanHoursColumn(df) {
 }
 
 /**
+ * Extract month string from a date
+ * 
+ * Converts a date string or Date object into a month name string.
+ * Returns the full month name (e.g., "January", "February", etc.)
+ * 
+ * @param {string|Date} dateValue - Date string or Date object
+ * @returns {string} Month name (e.g., "January") or "Unknown" if invalid
+ * 
+ * @example
+ * getMonthString("2025-03-15") // Returns "March"
+ * getMonthString(new Date()) // Returns current month name
+ */
+export function getMonthKey(dateString) {
+    if  (!dateString) return 'Unknown';
+
+    const date = new Date(dateString)
+
+    if (isNaN(date.getTime())) {
+        return 'Unknown'
+    }
+
+    const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+
+    const month = monthNames[date.getMonth()]
+    return `${month}`;
+}
+
+/**
  * Main data processing function
  * 
  * Orchestrates the entire data processing pipeline:
@@ -423,6 +454,10 @@ export async function processData(fileName, scale = null) {
             // Add calculated score and breakdown to record
             cleanRecord.score = score;
             cleanRecord.score_breakdown = scoreBreakdown;
+
+            if (cleanRecord.month) {
+                cleanRecord.month = getMonthKey(cleanRecord.month)
+            }
             
             return cleanRecord;
         });

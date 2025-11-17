@@ -2,6 +2,7 @@
     "csv_format_2025": {
         "description": "This is the format of the CSV file for the 2025 ISP application.",
         "columns":{
+            "timestamp": "Timestamp",
             "name": "Full Name (First & Last Name)",
             "school_year": "School Year",
             "accepted_internship": "Have you accepted an internship for this upcoming summer?",
@@ -15,6 +16,7 @@
             "need_level": "Need Level"
         },
         "renamed_columns": {
+            "Timestamp": "month",
             "Full Name (First & Last Name)": "name",
             "School Year": "school_year",
             "Have you accepted an internship for this upcoming summer?": "accepted_internship",

@@ -164,133 +164,164 @@ export default function Result() {
                     </div>
                 )}
                 
-                {!isLoading && !error && extractedData && (
-                    <div className="text-center flex flex-col items-center justify-center rounded-md p-2">
-                        {/* Student Data */}
-                        <div className="flex flex-wrap gap-4 overflow-y-auto max-h-[calc(100vh/1.5)] rounded-md p-2">
-                            {extractedData.data.map((item, index) => {
-                                // Check for invalid elements using warnings from backend
-                                const getInvalidFields = () => {
-                                    if (!extractedData.warnings) return [];
-                                    
-                                    const invalidFields = [];
-                                    extractedData.warnings.forEach(warning => {
-                                        // Parse warning to extract field name and invalid values
-                                        // Warning format: "Invalid field_name values: [value1, value2, ...]"
-                                        const match = warning.match(/Invalid (\w+) values: \[(.*)\]/);
-                                        if (match) {
-                                            const fieldName = match[1];
-                                            const invalidValuesStr = match[2];
-                                            // Parse the invalid values list and convert to lowercase
-                                            const invalidValues = invalidValuesStr
-                                                .split(',')
-                                                .map(val => val.trim().replace(/['"]/g, '').toLowerCase())
-                                                .filter(val => val.length > 0);
+                {!isLoading && !error && extractedData && (() => {
+                    // Group data by month
+                    const groupedByMonth = extractedData.data.reduce((groups, item) => {
+                        const month = item.month || 'Unknown';
+                        if (!groups[month]) {
+                            groups[month] = [];
+                        }
+                        groups[month].push(item);
+                        return groups;
+                    }, {});
+                    
+                    // Sort months chronologically
+                    const monthOrder = ["January", "February", "March", "April", "May", "June",
+                                       "July", "August", "September", "October", "November", "December"];
+                    const sortedMonths = Object.keys(groupedByMonth).sort((a, b) => {
+                        const indexA = monthOrder.indexOf(a);
+                        const indexB = monthOrder.indexOf(b);
+                        // Handle "Unknown" month - put it at the end
+                        if (indexA === -1) return 1;
+                        if (indexB === -1) return -1;
+                        return indexA - indexB;
+                    });
+                    
+                    return (
+                        <div className="text-center flex flex-col items-center justify-center rounded-md p-2">
+                            {/* Student Data Grouped by Month */}
+                            {sortedMonths.map((month) => (
+                                <div key={month} className="w-full mb-6">
+                                    <h3 className="text-xl font-bold mb-4 sticky top-0 bg-white py-2 z-10 border-b-2 text-left">
+                                        {month} ({groupedByMonth[month].length} students)
+                                    </h3>
+                                    <div className="flex flex-wrap gap-4 overflow-y-auto max-h-[calc(100vh/1.5)] rounded-md p-2">
+                                        {groupedByMonth[month].map((item, index) => {
+                                            // Check for invalid elements using warnings from backend
+                                            const getInvalidFields = () => {
+                                                if (!extractedData.warnings) return [];
+                                                
+                                                const invalidFields = [];
+                                                extractedData.warnings.forEach(warning => {
+                                                    // Parse warning to extract field name and invalid values
+                                                    // Warning format: "Invalid field_name values: [value1, value2, ...]"
+                                                    const match = warning.match(/Invalid (\w+) values: \[(.*)\]/);
+                                                    if (match) {
+                                                        const fieldName = match[1];
+                                                        const invalidValuesStr = match[2];
+                                                        // Parse the invalid values list and convert to lowercase
+                                                        const invalidValues = invalidValuesStr
+                                                            .split(',')
+                                                            .map(val => val.trim().replace(/['"]/g, '').toLowerCase())
+                                                            .filter(val => val.length > 0);
+                                                        
+                                                        // Check if this student's value for this field is in the invalid list (case insensitive)
+                                                        const studentValue = item[fieldName];
+                                                        if (studentValue && invalidValues.includes(studentValue.toString().toLowerCase())) {
+                                                            invalidFields.push(fieldName);
+                                                        }
+                                                    }
+                                                });
+                                                return [...new Set(invalidFields)]; // Remove duplicates
+                                            };
                                             
-                                            // Check if this student's value for this field is in the invalid list (case insensitive)
-                                            const studentValue = item[fieldName];
-                                            if (studentValue && invalidValues.includes(studentValue.toString().toLowerCase())) {
-                                                invalidFields.push(fieldName);
-                                            }
-                                        }
-                                    });
-                                    return [...new Set(invalidFields)]; // Remove duplicates
-                                };
-                                
-                                const invalidFields = getInvalidFields();
-                                const isOpen = openStudents.has(index);
-                                
-                                return (
-                                    <div 
-                                        key={index} 
-                                        className={`flex flex-col justify-left items-start p-2 m-2 rounded bg-white gap-1 shadow-md cursor-pointer hover:bg-gray-50 min-w-100
-                                            ${invalidFields.length > 0 ? 'border-2 border-red-200 border-dashed rounded-md' : ''}
-                                            `}
-                                        onClick={() => handleStudentClick(index)}
-                                    >
-                                        <div className="flex flex-row justify-between items-center w-full">
-                                            <h3 className="text-lg font-bold"><span className={invalidFields.includes('name') ? 'bg-red-200 px-1 rounded' : ''}>{item.name || 'N/A'}</span></h3>
-                                            <span className={`text-lg font-bold px-2 py-1 rounded ${item.score > 14 ? 'bg-green-100' : 'bg-red-100'}`}>
-                                                {item.score}
-                                            </span>
-                                        </div>
+                                            const invalidFields = getInvalidFields();
+                                            const studentKey = `${month}-${index}`;
+                                            const isOpen = openStudents.has(studentKey);
+                                            
+                                            return (
+                                                <div 
+                                                    key={studentKey} 
+                                                    className={`flex flex-col justify-left items-start p-2 m-2 rounded bg-white gap-1 shadow-md cursor-pointer hover:bg-gray-50 min-w-100
+                                                        ${invalidFields.length > 0 ? 'border-2 border-red-200 border-dashed rounded-md' : ''}
+                                                        `}
+                                                    onClick={() => handleStudentClick(studentKey)}
+                                                >
+                                                    <div className="flex flex-row justify-between items-center w-full">
+                                                        <h3 className="text-lg font-bold"><span className={invalidFields.includes('name') ? 'bg-red-200 px-1 rounded' : ''}>{item.name || 'N/A'}</span></h3>
+                                                        <span className={`text-lg font-bold px-2 py-1 rounded ${item.score > 14 ? 'bg-green-100' : 'bg-red-100'}`}>
+                                                            {item.score}
+                                                        </span>
+                                                    </div>
 
-                                        {/* Breakdown */}
-                                        <div className={`flex flex-row justify-left rounded-md items-start gap-1 w-full ${isOpen ? 'flex' : 'hidden'}`}>
-                                            <div className="flex flex-col justify-left gap-2 items-start text-sm rounded-md p-2">
-                                                {/* Eligibility */}
-                                                <h2 className="text-[16px] font-bold  ">Eligibility</h2>
-                                                <p>School Year: <span className={`font-semibold ${invalidFields.includes('school_year') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.school_year || 'N/A'}</span></p>
-                                                <p>Accepted Internship: <span className={`font-semibold ${invalidFields.includes('accepted_internship') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.accepted_internship || 'N/A'}</span></p>
-                                                <p>Additional Funding: <span className={`font-semibold ${invalidFields.includes('additional_funding') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.additional_funding || 'N/A'}</span></p>
-                                                <p>Internship Length: <span className={`font-semibold ${invalidFields.includes('internship_length') ? 'bg-red-200 px-1 rounded' : ''}`}>{`${Math.ceil((new Date(item.end_date) - new Date(item.start_date)) / (1000 * 60 * 60 * 24 * 7))} weeks`}</span></p>
-                                                <p>Hours: <span className={`font-semibold ${invalidFields.includes('hours') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.hours || 'N/A'}</span></p>
-                                            </div>
+                                                    {/* Breakdown */}
+                                                    <div className={`flex flex-row justify-left rounded-md items-start gap-1 w-full ${isOpen ? 'flex' : 'hidden'}`}>
+                                                        <div className="flex flex-col justify-left gap-2 items-start text-sm rounded-md p-2">
+                                                            {/* Eligibility */}
+                                                            <h2 className="text-[16px] font-bold  ">Eligibility</h2>
+                                                            <p>School Year: <span className={`font-semibold ${invalidFields.includes('school_year') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.school_year || 'N/A'}</span></p>
+                                                            <p>Accepted Internship: <span className={`font-semibold ${invalidFields.includes('accepted_internship') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.accepted_internship || 'N/A'}</span></p>
+                                                            <p>Additional Funding: <span className={`font-semibold ${invalidFields.includes('additional_funding') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.additional_funding || 'N/A'}</span></p>
+                                                            <p>Internship Length: <span className={`font-semibold ${invalidFields.includes('internship_length') ? 'bg-red-200 px-1 rounded' : ''}`}>{`${Math.ceil((new Date(item.end_date) - new Date(item.start_date)) / (1000 * 60 * 60 * 24 * 7))} weeks`}</span></p>
+                                                            <p>Hours: <span className={`font-semibold ${invalidFields.includes('hours') ? 'bg-red-200 px-1 rounded' : ''}`}>{item.hours || 'N/A'}</span></p>
+                                                        </div>
 
-                                            {/* Scores */}
-                                            <div className="flex flex-col justify-center items-start rounded-md p-2">
-                                                <h2 className="text-[16px] font-bold ">Scores</h2>
-                                                <table className="w-full border-collapse">
-                                                    <tbody>
-                                                        {/* Location */}
-                                                        <tr className="border-b">            
-                                                            <td className="text-sm text-left border-r pr-5">
-                                                                <span className={invalidFields.includes('location') ? 'bg-red-200 px-1 rounded' : ''}>{formatStateName(item.location) || 'N/A'}</span>
-                                                            </td>
-                                                                                                                         <td className="text-sm text-right py-1 pl-5">{item.score_breakdown.location !== undefined ? item.score_breakdown.location : 'N/A'}</td>
-                                                        </tr>
-                                                        {/* Need Level */}
-                                                        <tr className="border-b">
-                                                            <td className="text-sm text-left border-r pr-5">
-                                                                <span className={invalidFields.includes('need_level') ? 'bg-red-200 px-1 rounded' : ''}>{item.need_level || 'N/A'}</span>
-                                                            </td>
-                                                                                                                         <td className="text-sm text-right py-1">{item.score_breakdown.need_level !== undefined ? item.score_breakdown.need_level : 'N/A'}</td>
-                                                        </tr>
-                                                        {/* Internship Type */}
-                                                        <tr className="border-b">
-                                                            <td className="text-sm text-left border-r pr-5">
-                                                                <span className={invalidFields.includes('internship_type') ? 'bg-red-200 px-1 rounded' : ''}>{item.internship_type || 'N/A'}</span>
-                                                            </td>
-                                                                                                                         <td className="text-sm text-right py-1">{item.score_breakdown.internship_type !== undefined ? item.score_breakdown.internship_type : 'N/A'}</td>
-                                                        </tr>
-                                                        {/* Paid Internship */}
-                                                        <tr className="border-b">
-                                                            <td className="text-sm text-left border-r pr-5">
-                                                                <span className={invalidFields.includes('paid_internship') ? 'bg-red-200 px-1 rounded' : ''}>{item.paid_internship || 'N/A'}</span>
-                                                            </td>
-                                                                                                                         <td className="text-sm text-right py-1">{item.score_breakdown.paid_internship !== undefined ? item.score_breakdown.paid_internship : 'N/A'}</td>
-                                                        </tr>
-                                                        <tr className="font-bold">
-                                                            <td className="text-sm text-left border-r">Total</td>
-                                                                                                                         <td className="text-sm text-right py-1">{item.score !== undefined ? item.score : 'N/A'}</td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
+                                                        {/* Scores */}
+                                                        <div className="flex flex-col justify-center items-start rounded-md p-2">
+                                                            <h2 className="text-[16px] font-bold ">Scores</h2>
+                                                            <table className="w-full border-collapse">
+                                                                <tbody>
+                                                                    {/* Location */}
+                                                                    <tr className="border-b">            
+                                                                        <td className="text-sm text-left border-r pr-5">
+                                                                            <span className={invalidFields.includes('location') ? 'bg-red-200 px-1 rounded' : ''}>{formatStateName(item.location) || 'N/A'}</span>
+                                                                        </td>
+                                                                        <td className="text-sm text-right py-1 pl-5">{item.score_breakdown.location !== undefined ? item.score_breakdown.location : 'N/A'}</td>
+                                                                    </tr>
+                                                                    {/* Need Level */}
+                                                                    <tr className="border-b">
+                                                                        <td className="text-sm text-left border-r pr-5">
+                                                                            <span className={invalidFields.includes('need_level') ? 'bg-red-200 px-1 rounded' : ''}>{item.need_level || 'N/A'}</span>
+                                                                        </td>
+                                                                        <td className="text-sm text-right py-1">{item.score_breakdown.need_level !== undefined ? item.score_breakdown.need_level : 'N/A'}</td>
+                                                                    </tr>
+                                                                    {/* Internship Type */}
+                                                                    <tr className="border-b">
+                                                                        <td className="text-sm text-left border-r pr-5">
+                                                                            <span className={invalidFields.includes('internship_type') ? 'bg-red-200 px-1 rounded' : ''}>{item.internship_type || 'N/A'}</span>
+                                                                        </td>
+                                                                        <td className="text-sm text-right py-1">{item.score_breakdown.internship_type !== undefined ? item.score_breakdown.internship_type : 'N/A'}</td>
+                                                                    </tr>
+                                                                    {/* Paid Internship */}
+                                                                    <tr className="border-b">
+                                                                        <td className="text-sm text-left border-r pr-5">
+                                                                            <span className={invalidFields.includes('paid_internship') ? 'bg-red-200 px-1 rounded' : ''}>{item.paid_internship || 'N/A'}</span>
+                                                                        </td>
+                                                                        <td className="text-sm text-right py-1">{item.score_breakdown.paid_internship !== undefined ? item.score_breakdown.paid_internship : 'N/A'}</td>
+                                                                    </tr>
+                                                                    <tr className="font-bold">
+                                                                        <td className="text-sm text-left border-r">Total</td>
+                                                                        <td className="text-sm text-right py-1">{item.score !== undefined ? item.score : 'N/A'}</td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
-
-                                );
-                            })}
-                        </div>
-
-                        {extractedData.warnings && extractedData.warnings.length > 0 && (
-                            <div className="mt-4 text-center mx-auto w-full">
-                                <span className="bg-red-100 px-1 rounded font-semibold">
+                                </div>
+                            ))}
+                            
+                            {extractedData.warnings && extractedData.warnings.length > 0 && (
+                                <div className="mt-4 text-center mx-auto w-full">
+                                    <span className="bg-red-100 px-1 rounded font-semibold">
                                         Sorry Jenn, I'm not sure what to do with these values so 
                                         I can't add them to the score. But don't worry, 
                                         I'll highlight the students so you can double check my work!
-                                </span>
-                               
-                                <ul className="text-sm list-disc list-inside">
-                                    {extractedData.warnings.map((warning, index) => (
-                                        <li key={index}>{warning.split(':')[0].trim()}: <span className="text-red-600">{warning.split(':')[1].trim()}</span></li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                    </div>
-                )}
+                                    </span>
+                                   
+                                    <ul className="text-sm list-disc list-inside">
+                                        {extractedData.warnings.map((warning, index) => (
+                                            <li key={index}>{warning.split(':')[0].trim()}: <span className="text-red-600">{warning.split(':')[1].trim()}</span></li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })()}
                 
                 {!isLoading && !error && !extractedData && (
                     <div className="text-center text-gray-500">

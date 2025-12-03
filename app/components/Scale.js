@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useScale } from "../context/ScaleContext";
 import { 
     DndContext, 
@@ -165,6 +165,15 @@ export default function Scale( { onSave }) {
         },
     };
 
+    // Tier point values (editable)
+    const [tierPoints, setTierPoints] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const saved = sessionStorage.getItem('tierPoints');
+            return saved ? JSON.parse(saved) : { tier1: 1, tier2: 3, tier3: 5 };
+        }
+        return { tier1: 1, tier2: 3, tier3: 5 };
+    });
+
     // Load from session storage or use default
     const [costOfLiving, setCostOfLiving] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -185,9 +194,74 @@ export default function Scale( { onSave }) {
         }
     }, [costOfLiving]);
 
+    // Save to session storage whenever tierPoints changes
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem('tierPoints', JSON.stringify(tierPoints));
+        }
+    }, [tierPoints]);
+
+    // Track previous tier points to avoid unnecessary updates
+    const prevTierPointsRef = useRef(tierPoints);
+    const isInitialMount = useRef(true);
+
+    // Update all states in a tier when tier points change
+    useEffect(() => {
+        // Skip on initial mount
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            prevTierPointsRef.current = tierPoints;
+            return;
+        }
+
+        // Check if tier points actually changed
+        const tier1Changed = prevTierPointsRef.current.tier1 !== tierPoints.tier1;
+        const tier2Changed = prevTierPointsRef.current.tier2 !== tierPoints.tier2;
+        const tier3Changed = prevTierPointsRef.current.tier3 !== tierPoints.tier3;
+
+        if (!tier1Changed && !tier2Changed && !tier3Changed) {
+            return;
+        }
+
+        // Update costOfLiving using functional update to avoid stale closure
+        setCostOfLiving(prevCostOfLiving => {
+            const updatedCostOfLiving = {
+                tier1: { ...prevCostOfLiving.tier1 },
+                tier2: { ...prevCostOfLiving.tier2 },
+                tier3: { ...prevCostOfLiving.tier3 }
+            };
+
+            // Update all states in tier1 if tier1 points changed
+            if (tier1Changed) {
+                Object.keys(updatedCostOfLiving.tier1).forEach(state => {
+                    updatedCostOfLiving.tier1[state] = tierPoints.tier1;
+                });
+            }
+
+            // Update all states in tier2 if tier2 points changed
+            if (tier2Changed) {
+                Object.keys(updatedCostOfLiving.tier2).forEach(state => {
+                    updatedCostOfLiving.tier2[state] = tierPoints.tier2;
+                });
+            }
+
+            // Update all states in tier3 if tier3 points changed
+            if (tier3Changed) {
+                Object.keys(updatedCostOfLiving.tier3).forEach(state => {
+                    updatedCostOfLiving.tier3[state] = tierPoints.tier3;
+                });
+            }
+
+            return updatedCostOfLiving;
+        });
+
+        // Update ref
+        prevTierPointsRef.current = tierPoints;
+    }, [tierPoints.tier1, tierPoints.tier2, tierPoints.tier3]);
+
     // Function to move state to different tier
     const moveStateToTier = (stateName, newTier) => {
-        const tierValues = { 1: 1, 2: 3, 3: 5 };
+        const tierValues = { 1: tierPoints.tier1, 2: tierPoints.tier2, 3: tierPoints.tier3 };
         const newValue = tierValues[newTier];
         
         // Remove from all tiers first
@@ -260,10 +334,12 @@ export default function Scale( { onSave }) {
             virtual: 0,
         });
         setCostOfLiving(defaultCostOfLiving);
+        setTierPoints({ tier1: 1, tier2: 3, tier3: 5 });
         
         // Clear session storage
         if (typeof window !== 'undefined') {
             sessionStorage.removeItem('costOfLiving');
+            sessionStorage.removeItem('tierPoints');
         }
         
         setSuccessMessage("Scale reset to default values");
@@ -389,7 +465,7 @@ export default function Scale( { onSave }) {
                         <hr className="border-1 border-black w-full" />
                         <div className="flex flex-row justify-between items-center gap-4">
                             <label htmlFor="Very High Need (VHN"> Very High Need (VHN)</label>
-                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5" 
+                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="15" 
                                 value={fafsaScale.very_high_need} 
                                 onChange={(e) => setFafsaScale({
                                     ...fafsaScale, // Default value
@@ -398,9 +474,10 @@ export default function Scale( { onSave }) {
                             />
                         </div>
                         <hr className="border-0.5 border-zinc-300 w-full h-px" />
+                        {/* High Need */}
                         <div className="flex flex-row justify-between items-center gap-4">
                             <label htmlFor="FAFSA">High Need (HN)</label>
-                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5" 
+                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="15" 
                                 value={fafsaScale.high_need} 
                                 onChange={(e) => setFafsaScale({
                                     ...fafsaScale, // Default value
@@ -409,9 +486,10 @@ export default function Scale( { onSave }) {
                             />
                         </div>
                         <hr className="border-0.5 border-zinc-300 w-full" />
+                        {/* Moderate Need */}
                         <div className="flex flex-row justify-between items-center gap-4">
                             <label htmlFor="FAFSA">Moderate Need (MH)</label>
-                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="3" min="0" max="5" 
+                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="3" min="0" max="15" 
                                 value={fafsaScale.moderate_need} 
                                 onChange={(e) => setFafsaScale({
                                     ...fafsaScale, // Default value
@@ -420,9 +498,10 @@ export default function Scale( { onSave }) {
                             />
                         </div>
                         <hr className="border-0.5 border-zinc-300 w-full" />
+                        {/* Low Need */}
                         <div className="flex flex-row justify-between items-center gap-4">
                             <label htmlFor="FAFSA">Low Need (LN)</label>
-                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="2" min="0" max="5" 
+                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="2" min="0" max="15" 
                                 value={fafsaScale.low_need} 
                                 onChange={(e) => setFafsaScale({
                                     ...fafsaScale, // Default value
@@ -431,9 +510,10 @@ export default function Scale( { onSave }) {
                             />
                         </div>
                         <hr className="border-0.5 border-zinc-300 w-full" />
+                        {/* No Need */}
                         <div className="flex flex-row justify-between items-center gap-4">
                             <label htmlFor="FAFSA">No Need (LN)</label>
-                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="0" min="0" max="5" 
+                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="0" min="0" max="15" 
                                 value={fafsaScale.no_need} 
                                 onChange={(e) => setFafsaScale({
                                     ...fafsaScale, // Default value
@@ -448,9 +528,10 @@ export default function Scale( { onSave }) {
                         <div className="flex flex-col gap-3 border-1 border-black rounded-md p-3 w-full min-w-fit">
                             <h3 className="text-lg font-bold text-center">Paid or Unpaid</h3>
                             <hr className="border-1 border-black w-full" />
+                            {/* Paid */}
                             <div className="flex flex-row justify-between items-center gap-4">
                                 <label htmlFor="Paid?">Paid</label>
-                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5"
+                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="10"
                                     value={paid.paid}
                                     onChange={(e) => setPaid({
                                         ...paid, // Default value
@@ -459,9 +540,10 @@ export default function Scale( { onSave }) {
                                 />
                             </div>
                             <hr className="border-0.5 border-zinc-300 w-full" />
+                            {/* Unpaid */}
                             <div className="flex flex-row justify-between items-center gap-4">
                                 <label htmlFor="Paid?">Unpaid</label>
-                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5"
+                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="10"
                                     value={paid.unpaid}
                                     onChange={(e) => setPaid({
                                         ...paid, // Default value
@@ -475,6 +557,7 @@ export default function Scale( { onSave }) {
                         <div className="flex flex-col gap-3 border-1 border-black rounded-md p-3 w-full min-w-fit">
                             <h3 className="text-lg font-bold text-center">In-Person or Remote</h3>
                             <hr className="border-1 border-black w-full" />
+                            {/* In-Person */}
                             <div className="flex flex-row justify-between items-center gap-4">
                                 <label htmlFor="Internship Type">In-Person</label>
                                 <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5"
@@ -486,6 +569,7 @@ export default function Scale( { onSave }) {
                                 />
                             </div>
                                 <hr className="border-0.5 border-zinc-300 w-full" />
+                            {/* Hybrid */}
                             <div className="flex flex-row justify-between items-center gap-4">
                                 <label htmlFor="Internship Type">Hybrid</label>
                                 <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5"
@@ -497,6 +581,7 @@ export default function Scale( { onSave }) {
                                 />
                             </div>
                             <hr className="border-0.5 border-zinc-300 w-full" />
+                            {/* Virtual */}
                             <div className="flex flex-row justify-between items-center gap-4">
                                 <label htmlFor="Internship Type">Virtual</label>
                                 <input className="border-2 border-black rounded-md p-2" type="number" placeholder="0" min="0" max="5" 
@@ -514,6 +599,55 @@ export default function Scale( { onSave }) {
                     <div className="flex flex-col gap-3 border-1 border-black rounded-md p-3 w-full min-w-fit items-center justify-center">
                         <h3 className="text-lg font-bold text-center">Cost of Living</h3>
                         <hr className="border-1 border-black w-full" />
+                        
+                        {/* Tier Point Inputs */}
+                        <div className="flex flex-row gap-4 w-full justify-center">
+                            <div className="flex flex-row items-center gap-2">
+                                <label htmlFor="tier1Points" className="text-sm font-semibold">Tier 1 Points:</label>
+                                <input 
+                                    className="border-2 border-black rounded-md p-2 w-20" 
+                                    type="number" 
+                                    placeholder="1" 
+                                    min="0" 
+                                    max="15"
+                                    value={tierPoints.tier1}
+                                    onChange={(e) => setTierPoints({
+                                        ...tierPoints,
+                                        tier1: parseInt(e.target.value) || 0
+                                    })} 
+                                />
+                            </div>
+                            <div className="flex flex-row items-center gap-2">
+                                <label htmlFor="tier2Points" className="text-sm font-semibold">Tier 2 Points:</label>
+                                <input 
+                                    className="border-2 border-black rounded-md p-2 w-20" 
+                                    type="number" 
+                                    placeholder="3" 
+                                    min="0" 
+                                    max="15"
+                                    value={tierPoints.tier2}
+                                    onChange={(e) => setTierPoints({
+                                        ...tierPoints,
+                                        tier2: parseInt(e.target.value) || 0
+                                    })} 
+                                />
+                            </div>
+                            <div className="flex flex-row items-center gap-2">
+                                <label htmlFor="tier3Points" className="text-sm font-semibold">Tier 3 Points:</label>
+                                <input 
+                                    className="border-2 border-black rounded-md p-2 w-20" 
+                                    type="number" 
+                                    placeholder="5" 
+                                    min="0" 
+                                    max="15"
+                                    value={tierPoints.tier3}
+                                    onChange={(e) => setTierPoints({
+                                        ...tierPoints,
+                                        tier3: parseInt(e.target.value) || 0
+                                    })} 
+                                />
+                            </div>
+                        </div>
 
                         <DndContext 
                             sensors={sensors}
@@ -523,17 +657,17 @@ export default function Scale( { onSave }) {
                             <div className="flex flex-row gap-4">
                                 <DroppableTier
                                     tierNumber={1}
-                                    tierTitle="Tier 1"
+                                    tierTitle={`Tier 1 (${tierPoints.tier1} pts)`}
                                     states={Object.keys(costOfLiving.tier1)}
                                 />
                                 <DroppableTier
                                     tierNumber={2}
-                                    tierTitle="Tier 2"
+                                    tierTitle={`Tier 2 (${tierPoints.tier2} pts)`}
                                     states={Object.keys(costOfLiving.tier2)}
                                 />
                                 <DroppableTier
                                     tierNumber={3}
-                                    tierTitle="Tier 3"
+                                    tierTitle={`Tier 3 (${tierPoints.tier3} pts)`}
                                     states={Object.keys(costOfLiving.tier3)}
                                 />
                             </div>

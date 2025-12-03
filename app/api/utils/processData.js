@@ -85,16 +85,35 @@ export async function cleanLocationColumn(df, apiKey) {
                     content: `
                         Extract the state from this location: '${location}'
                         Return only the state name with no spaces (e.g., 'NewYork', 'California', 'Texas')
+                        For District of Columbia, return 'DistrictOfColumbia' (not 'DC' or 'Washington')
                         If no state is found, return 'Unknown'
                         Examples:
                         - 'New York, NY' -> 'NewYork'
                         - 'Los Angeles, CA' -> 'California'
-                        - 'South Carolina' -> 'SouthCarolina'`
+                        - 'South Carolina' -> 'SouthCarolina'
+                        - 'Washington, DC' -> 'DistrictOfColumbia'
+                        - 'District of Columbia' -> 'DistrictOfColumbia'
+                        - 'DC' -> 'DistrictOfColumbia'`
                 }]
             });
-            return response.choices[0].message.content.trim();
+            let cleaned = response.choices[0].message.content.trim();
+            
+            // Normalize District of Columbia variations
+            const dcVariations = ['DC', 'D.C.', 'District of Columbia', 'district of columbia', 'Washington DC', 'Washington, DC', 'Washington D.C.'];
+            if (dcVariations.some(variation => location.toLowerCase().includes(variation.toLowerCase())) || 
+                cleaned.toLowerCase().includes('dc') || 
+                cleaned.toLowerCase().includes('district')) {
+                cleaned = 'DistrictOfColumbia';
+            }
+            
+            return cleaned;
         } catch (error) {
             console.error(`Error cleaning location '${location}': ${error}`);
+            // Fallback: check if it's DC-related
+            const locationLower = location.toLowerCase();
+            if (locationLower.includes('dc') || locationLower.includes('district of columbia') || locationLower.includes('washington, dc')) {
+                return 'DistrictOfColumbia';
+            }
             return "Unknown";
         }
     }
@@ -138,11 +157,34 @@ export async function cleanLocationColumn(df, apiKey) {
         }
     }
     
-    // Apply the location mapping to all rows
-    return cleanDf.map(row => ({
-        ...row,
-        location: locationMapping[row.location] || row.location || "Unknown"
-    }));
+    // Normalize location names to match scale keys
+    function normalizeLocation(location) {
+        if (!location) return "Unknown";
+        
+        const loc = String(location).trim();
+        const locLower = loc.toLowerCase();
+        
+        // Handle District of Columbia variations
+        if (locLower.includes('dc') || 
+            locLower.includes('district of columbia') || 
+            locLower === 'd.c.' ||
+            locLower === 'washington dc' ||
+            locLower === 'washington, dc') {
+            return 'DistrictOfColumbia';
+        }
+        
+        // Return as-is if already normalized
+        return loc;
+    }
+    
+    // Apply the location mapping to all rows and normalize
+    return cleanDf.map(row => {
+        const mappedLocation = locationMapping[row.location] || row.location || "Unknown";
+        return {
+            ...row,
+            location: normalizeLocation(mappedLocation)
+        };
+    });
 }
 
 /**
@@ -436,14 +478,34 @@ export async function processData(fileName, scale = null) {
             // Location/Cost of Living scoring (1-5 points based on state tier)
             if (cleanRecord.location) {
                 let locationScore = 0;
-                const location = cleanRecord.location;
+                let location = cleanRecord.location;
                 const costOfLiving = scale.cost_of_living;
+                
+                // Normalize location for lookup (handle District of Columbia variations)
+                const locationLower = String(location).toLowerCase();
+                if (locationLower.includes('dc') || 
+                    locationLower.includes('district of columbia') || 
+                    locationLower === 'd.c.' ||
+                    locationLower === 'washington dc' ||
+                    locationLower === 'washington, dc') {
+                    location = 'DistrictOfColumbia';
+                }
                 
                 // Look up location in cost of living tiers (tier1, tier2, tier3)
                 for (const tier of Object.values(costOfLiving)) {
                     if (tier[location]) {
                         locationScore = tier[location];
                         break;
+                    }
+                }
+                
+                // If still no score found and location contains DC-related terms, try DistrictOfColumbia explicitly
+                if (locationScore === 0 && (locationLower.includes('dc') || locationLower.includes('district'))) {
+                    for (const tier of Object.values(costOfLiving)) {
+                        if (tier['DistrictOfColumbia']) {
+                            locationScore = tier['DistrictOfColumbia'];
+                            break;
+                        }
                     }
                 }
                 

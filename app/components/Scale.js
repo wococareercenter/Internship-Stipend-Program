@@ -465,7 +465,7 @@ export default function Scale( { onSave }) {
                         <hr className="border-1 border-black w-full" />
                         <div className="flex flex-row justify-between items-center gap-4">
                             <label htmlFor="Very High Need (VHN"> Very High Need (VHN)</label>
-                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="15" 
+                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="12" min="0" max="15" 
                                 value={fafsaScale.very_high_need} 
                                 onChange={(e) => setFafsaScale({
                                     ...fafsaScale, // Default value
@@ -477,7 +477,7 @@ export default function Scale( { onSave }) {
                         {/* High Need */}
                         <div className="flex flex-row justify-between items-center gap-4">
                             <label htmlFor="FAFSA">High Need (HN)</label>
-                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="15" 
+                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="12" min="0" max="15" 
                                 value={fafsaScale.high_need} 
                                 onChange={(e) => setFafsaScale({
                                     ...fafsaScale, // Default value
@@ -489,7 +489,7 @@ export default function Scale( { onSave }) {
                         {/* Moderate Need */}
                         <div className="flex flex-row justify-between items-center gap-4">
                             <label htmlFor="FAFSA">Moderate Need (MH)</label>
-                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="3" min="0" max="15" 
+                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="9" min="0" max="15" 
                                 value={fafsaScale.moderate_need} 
                                 onChange={(e) => setFafsaScale({
                                     ...fafsaScale, // Default value
@@ -501,7 +501,7 @@ export default function Scale( { onSave }) {
                         {/* Low Need */}
                         <div className="flex flex-row justify-between items-center gap-4">
                             <label htmlFor="FAFSA">Low Need (LN)</label>
-                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="2" min="0" max="15" 
+                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="15" 
                                 value={fafsaScale.low_need} 
                                 onChange={(e) => setFafsaScale({
                                     ...fafsaScale, // Default value
@@ -513,7 +513,7 @@ export default function Scale( { onSave }) {
                         {/* No Need */}
                         <div className="flex flex-row justify-between items-center gap-4">
                             <label htmlFor="FAFSA">No Need (LN)</label>
-                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="0" min="0" max="15" 
+                            <input className="border-2 border-black rounded-md p-2" type="number" placeholder="2" min="0" max="15" 
                                 value={fafsaScale.no_need} 
                                 onChange={(e) => setFafsaScale({
                                     ...fafsaScale, // Default value
@@ -531,7 +531,7 @@ export default function Scale( { onSave }) {
                             {/* Paid */}
                             <div className="flex flex-row justify-between items-center gap-4">
                                 <label htmlFor="Paid?">Paid</label>
-                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="10"
+                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="15"
                                     value={paid.paid}
                                     onChange={(e) => setPaid({
                                         ...paid, // Default value
@@ -543,7 +543,7 @@ export default function Scale( { onSave }) {
                             {/* Unpaid */}
                             <div className="flex flex-row justify-between items-center gap-4">
                                 <label htmlFor="Paid?">Unpaid</label>
-                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="10"
+                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="6" min="0" max="15"
                                     value={paid.unpaid}
                                     onChange={(e) => setPaid({
                                         ...paid, // Default value
@@ -560,7 +560,7 @@ export default function Scale( { onSave }) {
                             {/* In-Person */}
                             <div className="flex flex-row justify-between items-center gap-4">
                                 <label htmlFor="Internship Type">In-Person</label>
-                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="5" min="0" max="5"
+                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="3" min="0" max="15"
                                     value={internshipType.in_person}
                                     onChange={(e) => setInternshipType({
                                         ...internshipType, // Default value
@@ -572,7 +572,7 @@ export default function Scale( { onSave }) {
                             {/* Hybrid */}
                             <div className="flex flex-row justify-between items-center gap-4">
                                 <label htmlFor="Internship Type">Hybrid</label>
-                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="4" min="0" max="5"
+                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="1" min="0" max="15"
                                     value={internshipType.hybrid}
                                     onChange={(e) => setInternshipType({
                                         ...internshipType, // Default value
@@ -584,7 +584,7 @@ export default function Scale( { onSave }) {
                             {/* Virtual */}
                             <div className="flex flex-row justify-between items-center gap-4">
                                 <label htmlFor="Internship Type">Virtual</label>
-                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="0" min="0" max="5" 
+                                <input className="border-2 border-black rounded-md p-2" type="number" placeholder="0" min="0" max="15" 
                                     value={internshipType.virtual}
                                     onChange={(e) => setInternshipType({
                                         ...internshipType, // Default value
@@ -622,7 +622,7 @@ export default function Scale( { onSave }) {
                                 <input 
                                     className="border-2 border-black rounded-md p-2 w-20" 
                                     type="number" 
-                                    placeholder="3" 
+                                    placeholder="2" 
                                     min="0" 
                                     max="15"
                                     value={tierPoints.tier2}
@@ -637,7 +637,7 @@ export default function Scale( { onSave }) {
                                 <input 
                                     className="border-2 border-black rounded-md p-2 w-20" 
                                     type="number" 
-                                    placeholder="5" 
+                                    placeholder="3" 
                                     min="0" 
                                     max="15"
                                     value={tierPoints.tier3}
@@ -657,17 +657,17 @@ export default function Scale( { onSave }) {
                             <div className="flex flex-row gap-4">
                                 <DroppableTier
                                     tierNumber={1}
-                                    tierTitle={`Tier 1 (${tierPoints.tier1} pts)`}
+                                    tierTitle={`Tier 1`}
                                     states={Object.keys(costOfLiving.tier1)}
                                 />
                                 <DroppableTier
                                     tierNumber={2}
-                                    tierTitle={`Tier 2 (${tierPoints.tier2} pts)`}
+                                    tierTitle={`Tier 2`}
                                     states={Object.keys(costOfLiving.tier2)}
                                 />
                                 <DroppableTier
                                     tierNumber={3}
-                                    tierTitle={`Tier 3 (${tierPoints.tier3} pts)`}
+                                    tierTitle={`Tier 3`}
                                     states={Object.keys(costOfLiving.tier3)}
                                 />
                             </div>

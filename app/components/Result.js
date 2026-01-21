@@ -239,7 +239,7 @@ export default function Result() {
                                                 >
                                                     <div className="flex flex-row justify-between items-center w-full">
                                                         <h3 className="text-lg font-bold"><span className={invalidFields.includes('name') ? 'bg-red-200 px-1 rounded' : ''}>{item.name || 'N/A'}</span></h3>
-                                                        <span className={`text-lg font-bold px-2 py-1 rounded ${item.score > 14 ? 'bg-green-100' : 'bg-red-100'}`}>
+                                                        <span className={`text-lg font-bold px-2 py-1 rounded ${item.score > 6 ? 'bg-green-100' : 'bg-red-100'}`}>
                                                             {item.score}
                                                         </span>
                                                     </div>

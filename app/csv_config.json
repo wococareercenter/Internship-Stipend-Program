@@ -66,19 +66,19 @@
     },
     "default_scale": {
         "fafsa_scale": {
-            "very_high_need": 5,
-            "high_need": 4,
-            "moderate_need": 3,
-            "low_need": 2,
-            "no_need": 0
+            "very_high_need": 10,
+            "high_need": 10,
+            "moderate_need": 9,
+            "low_need": 5,
+            "no_need": 2
         },
         "paid": {
             "paid": 4,
-            "unpaid": 5
+            "unpaid": 6
         },
         "internship_type": {
-            "in_person": 5,
-            "hybrid": 4,
+            "in_person": 3,
+            "hybrid": 1,
             "virtual": 0
         },
         "cost_of_living": {
@@ -89,18 +89,18 @@
                 "Kansas": 1, "Iowa": 1
             },
             "tier2": {
-                "NorthCarolina": 3, "Illinois": 3, "Wisconsin": 3, "Nebraska": 3,
-                "Idaho": 3, "SouthDakota": 3, "NewMexico": 3, "Florida": 3,
-                "Pennsylvania": 3, "Minnesota": 3, "Virginia": 3, "Utah": 3,
-                "Wyoming": 3, "NorthDakota": 3, "SouthCarolina": 3, "International": 3,
-                "Louisiana": 3, "Kentucky": 3, "Nevada": 3
+                "NorthCarolina": 2, "Illinois": 2, "Wisconsin": 2, "Nebraska": 2,
+                "Idaho": 2, "SouthDakota": 2, "NewMexico": 2, "Florida": 2,
+                "Pennsylvania": 2, "Minnesota": 2, "Virginia": 2, "Utah": 2,
+                "Wyoming": 2, "NorthDakota": 2, "SouthCarolina": 2, "International": 2,
+                "Louisiana": 2, "Kentucky": 2, "Nevada": 2
             },
             "tier3": {
-                "Montana": 5, "Colorado": 5, "NewYork": 5, "Washington": 5,
-                "Maine": 5, "Oregon": 5, "Vermont": 5, "NewJersey": 5,
-                "NewHampshire": 5, "Maryland": 5, "RhodeIsland": 5, "Connecticut": 5,
-                "Massachusetts": 5, "Hawaii": 5, "California": 5, "Alaska": 5,
-                "DistrictOfColumbia": 5, "Delaware": 5, "Arizona": 5
+                "Montana": 3, "Colorado": 3, "NewYork": 3, "Washington": 3,
+                "Maine": 3, "Oregon": 3, "Vermont": 3, "NewJersey": 3,
+                "NewHampshire": 3, "Maryland": 3, "RhodeIsland": 3, "Connecticut": 3,
+                "Massachusetts": 3, "Hawaii": 3, "California": 3, "Alaska": 3,
+                "DistrictOfColumbia": 3, "Delaware": 3, "Arizona": 3
             }
         }
     }

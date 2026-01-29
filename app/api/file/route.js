@@ -37,68 +37,105 @@ export async function OPTIONS() {
  * Get current uploaded file information
  * Returns file metadata and content if available
  */
+// export async function GET(request) {
+//     try {
+//         // Determine uploads directory based on environment
+//         // Vercel uses /tmp (ephemeral), local uses public/uploads
+//         const uploadsDir = process.env.VERCEL 
+//             ? '/tmp/uploads'
+//             : path.join(process.cwd(), 'public', 'uploads');
+        
+//         // Return null if uploads directory doesn't exist
+//         if (!fs.existsSync(uploadsDir)) {
+//             return NextResponse.json({ 
+//                 file: null, 
+//                 content: null 
+//             }, {
+//                 headers: {
+//                     'Access-Control-Allow-Origin': '*',
+//                     'Access-Control-Allow-Methods': 'GET, OPTIONS',
+//                     'Access-Control-Allow-Headers': 'Content-Type',
+//                 }
+//             });
+//         }
+        
+//         // Check if there's a file in uploads directory
+//         const files = await fs.promises.readdir(uploadsDir);
+//         for (const filename of files) {
+//             const filePath = path.join(uploadsDir, filename);
+//             const stat = await fs.promises.stat(filePath);
+            
+//             if (stat.isFile()) {
+//                 // Get file content if it's a CSV (for preview purposes)
+//                 let content = null;
+//                 const fileExtension = path.extname(filename).toLowerCase();
+//                 if (fileExtension === '.csv') {
+//                     try {
+//                         content = await fs.promises.readFile(filePath, 'utf-8');
+//                     } catch (err) {
+//                         console.error(`Error reading file content: ${err}`);
+//                     }
+//                 }
+                
+//                 // Return file metadata and content
+//                 return NextResponse.json({
+//                     file: {
+//                         name: filename,
+//                         size: stat.size,
+//                         uploadDate: new Date(stat.mtime).toISOString()
+//                     },
+//                     content: content
+//                 }, {
+//                     headers: {
+//                         'Access-Control-Allow-Origin': '*',
+//                         'Access-Control-Allow-Methods': 'GET, OPTIONS',
+//                         'Access-Control-Allow-Headers': 'Content-Type',
+//                     }
+//                 });
+//             }
+//         }
+        
+//         // No file found in uploads directory
+//         return NextResponse.json({ 
+//             file: null, 
+//             content: null 
+//         }, {
+//             headers: {
+//                 'Access-Control-Allow-Origin': '*',
+//                 'Access-Control-Allow-Methods': 'GET, OPTIONS',
+//                 'Access-Control-Allow-Headers': 'Content-Type',
+//             }
+//         });
+
+//     } catch (error) {
+//         // Log error for debugging
+//         console.error('File fetch error:', error);
+//         console.error('Error stack:', error.stack);
+        
+//         // Return error response
+//         return NextResponse.json({ 
+//             error: "Failed to fetch file",
+//             details: error.message 
+//         }, { 
+//             status: 500,
+//             headers: {
+//                 'Access-Control-Allow-Origin': '*',
+//                 'Access-Control-Allow-Methods': 'GET, OPTIONS',
+//                 'Access-Control-Allow-Headers': 'Content-Type',
+//             }
+//         });
+//     }
+// }
+
+
 export async function GET(request) {
     try {
-        // Determine uploads directory based on environment
-        // Vercel uses /tmp (ephemeral), local uses public/uploads
-        const uploadsDir = process.env.VERCEL 
-            ? '/tmp/uploads'
-            : path.join(process.cwd(), 'public', 'uploads');
-        
-        // Return null if uploads directory doesn't exist
-        if (!fs.existsSync(uploadsDir)) {
-            return NextResponse.json({ 
-                file: null, 
-                content: null 
-            }, {
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                    'Access-Control-Allow-Headers': 'Content-Type',
-                }
-            });
-        }
-        
-        // Check if there's a file in uploads directory
-        const files = await fs.promises.readdir(uploadsDir);
-        for (const filename of files) {
-            const filePath = path.join(uploadsDir, filename);
-            const stat = await fs.promises.stat(filePath);
-            
-            if (stat.isFile()) {
-                // Get file content if it's a CSV (for preview purposes)
-                let content = null;
-                const fileExtension = path.extname(filename).toLowerCase();
-                if (fileExtension === '.csv') {
-                    try {
-                        content = await fs.promises.readFile(filePath, 'utf-8');
-                    } catch (err) {
-                        console.error(`Error reading file content: ${err}`);
-                    }
-                }
-                
-                // Return file metadata and content
-                return NextResponse.json({
-                    file: {
-                        name: filename,
-                        size: stat.size,
-                        uploadDate: new Date(stat.mtime).toISOString()
-                    },
-                    content: content
-                }, {
-                    headers: {
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                        'Access-Control-Allow-Headers': 'Content-Type',
-                    }
-                });
-            }
-        }
-        
-        // No file found in uploads directory
-        return NextResponse.json({ 
-            file: null, 
-            content: null 
+        const res = await fetch("https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLjCsgT23dDea2Kwi6dhqG8ty3ea9M83O9-HI6r-nWpgDHRLi6M0QU1ZDhRo20c3JNNQZ99oxnyCthHKYLMuJQOZBQ1s2BFNC9ShCUThDIMKvmcVxQ8Pgug55sm9k1lZLOxbaBMAakUXHZyyZdkuxfBZ-BPWBWd4mNbIkuO-KawIFQE1YC0EF7dX7J3BjZAEW9IokvVeGwWulUDc-XeUM_IE4H8c-3C-Ve0qgf-HAhvm74fa4-pRtRNKL2dA6KP_N07LFc_8ltarLlNDc_iwujGTEmNkVsNTW_V3pTpf&lib=MeZN7iawh1qkufiHTNx9eFUUkj10Wrk_b");
+        const data = await res.json();
+
+        // Return file metadata and content
+        return NextResponse.json({
+            content: data
         }, {
             headers: {
                 'Access-Control-Allow-Origin': '*',
@@ -106,24 +143,17 @@ export async function GET(request) {
                 'Access-Control-Allow-Headers': 'Content-Type',
             }
         });
-
     } catch (error) {
-        // Log error for debugging
-        console.error('File fetch error:', error);
-        console.error('Error stack:', error.stack);
-        
-        // Return error response
         return NextResponse.json({ 
-            error: "Failed to fetch file",
+            error: "Failed to fetch data", 
             details: error.message 
-        }, { 
-            status: 500,
+        }, {
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'GET, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type',
-            }
+            },
+            status: 500
         });
     }
 }
-

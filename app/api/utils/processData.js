@@ -308,37 +308,37 @@ export function getMonthKey(dateString) {
  * const result = await processData('data.csv', customScale);
  * // Returns: { data: [...], warnings: [...], total_records: 100, columns: [...] }
  */
-export async function processData(fileName, scale = null) {
+export async function processData(data, scale = null) {
     try {
         // Load CSV configuration (column mappings, validations, default scale)
-        const config = loadCsvConfig();
-        const csvFormat = config.csv_format_2025;
-        const defaultScale = config.default_scale;
+        // const config = loadCsvConfig();
+        // const csvFormat = config.csv_format_2025;
+        // const defaultScale = config.default_scale;
         
         // Use provided scale or fall back to default from config
         if (!scale) {
             scale = defaultScale;
         }
         
-        const columns = csvFormat.columns;
-        const renamedColumns = csvFormat.renamed_columns;
+        // const columns = csvFormat.columns;
+        // const renamedColumns = csvFormat.renamed_columns;
         
-        // Determine uploads directory based on environment
-        // Vercel uses /tmp (ephemeral), local uses public/uploads
-        const uploadsDir = process.env.VERCEL 
-            ? '/tmp/uploads'
-            : path.join(process.cwd(), 'public', 'uploads');
+        // // Determine uploads directory based on environment
+        // // Vercel uses /tmp (ephemeral), local uses public/uploads
+        // const uploadsDir = process.env.VERCEL 
+        //     ? '/tmp/uploads'
+        //     : path.join(process.cwd(), 'public', 'uploads');
         
-        const filePath = path.join(uploadsDir, fileName);
+        // const filePath = path.join(uploadsDir, fileName);
         
-        // Verify file exists
-        if (!fs.existsSync(filePath)) {
-            throw new Error("File not found");
-        }
+        // // Verify file exists
+        // if (!fs.existsSync(filePath)) {
+        //     throw new Error("File not found");
+        // }
         
-        // Read and parse CSV file
-        const fileContent = fs.readFileSync(filePath, 'utf-8');
-        const parseResult = Papa.parse(fileContent, {
+        // // Read and parse CSV file
+        // const fileContent = fs.readFileSync(filePath, 'utf-8');
+        const parseResult = Papa.parse(data.data, {
             header: true,              // First row contains headers
             skipEmptyLines: true,      // Skip completely empty lines
             transformHeader: (header) => header.trim().toLowerCase()  // Normalize headers

@@ -60,13 +60,13 @@ export default function Result() {
             // console.log("Fetching file info...");
             const fileResponse = await fetch(`${baseUrl}/api/file`);
             const fileData = await fileResponse.json();
-            // console.log("File data:", fileData);
+            console.log("File Data:", fileData.content);
             
-            if (!fileData.file) {
-                console.log("No file found");
-                setError("No file uploaded yet. Please upload a CSV file first.");
-                return;
-            }
+            // if (!fileData.file) {
+            //     console.log("No file found");
+            //     setError("No file uploaded yet. Please upload a CSV file first.");
+            //     return;
+            // }
             
             // Now extract data from the uploaded file
             // console.log("Extracting data from file:", fileData.file.name);
@@ -76,7 +76,7 @@ export default function Result() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    file_name: fileData.file.name,
+                    data: fileData.content,
                     scale: scale
                 })
             });

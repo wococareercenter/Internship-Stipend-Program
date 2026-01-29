@@ -28,22 +28,8 @@ export default function Result() {
     };
 
     useEffect(() => {
-        // console.log("Component mounted, starting fetch...");
         setIsMounted(true);
         fetchExtractedData();
-        
-        // Listen for file upload events
-        const handleFileUploaded = () => {
-            console.log("File uploaded, refreshing data...");
-            fetchExtractedData();
-        };
-        
-        window.addEventListener('fileUploaded', handleFileUploaded);
-        
-        // Cleanup event listener
-        return () => {
-            window.removeEventListener('fileUploaded', handleFileUploaded);
-        };
     }, []);
 
     // Load extracted data
@@ -53,23 +39,24 @@ export default function Result() {
         setError(null);
         
         try {
-            // Add artificial delay for testing loading state
-            await new Promise(resolve => setTimeout(resolve, 1000)); // 3 second delay
-            
-            // First, get the current file info
-            // console.log("Fetching file info...");
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
             const fileResponse = await fetch(`${baseUrl}/api/file`);
             const fileData = await fileResponse.json();
-            console.log("File Data:", fileData.content);
-            
-            // if (!fileData.file) {
-            //     console.log("No file found");
-            //     setError("No file uploaded yet. Please upload a CSV file first.");
-            //     return;
-            // }
-            
-            // Now extract data from the uploaded file
-            // console.log("Extracting data from file:", fileData.file.name);
+
+            if (!fileData.content) {
+                setError("No data available. Unable to load data from source.");
+                return;
+            }
+
+            const content = fileData.content;
+            const hasData = Array.isArray(content) && content.length > 0 ||
+                (content && typeof content === 'object' && Array.isArray(content.data) && content.data.length > 0);
+            if (!hasData) {
+                setError("No data available. Unable to load data from source.");
+                return;
+            }
+
             const extractResponse = await fetch(`${baseUrl}/api/extract`, {
                 method: 'POST',
                 headers: {
@@ -80,12 +67,11 @@ export default function Result() {
                     scale: scale
                 })
             });
-            
+
             if (!extractResponse.ok) {
-                throw new Error(`Failed to extract data from file. 
-                    Check the column names or file format. 
-                    Server returned status code: ${extractResponse.status}. 
-                    Please try uploading the file again or contact support if the issue persists.`);
+                const errBody = await extractResponse.json().catch(() => ({}));
+                const details = errBody.details || extractResponse.status;
+                throw new Error(`Failed to extract data. Check the column names or data format. Server returned: ${details}`);
             }
             
             const data = await extractResponse.json();

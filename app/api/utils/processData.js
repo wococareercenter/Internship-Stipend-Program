@@ -287,251 +287,177 @@ export function getMonthKey(dateString) {
 }
 
 /**
- * Main data processing function
- * 
- * Orchestrates the entire data processing pipeline:
- * 1. Loads CSV configuration
- * 2. Reads and parses the CSV file
- * 3. Validates required columns
- * 4. Maps and renames columns
- * 5. Cleans location data using OpenAI
- * 6. Standardizes hours data
- * 7. Validates data values
- * 8. Calculates scores for each record
- * 
- * @param {string} fileName - Name of the uploaded CSV file
- * @param {object|null} scale - Scoring scale configuration (uses default from config if not provided)
- * @returns {Promise<object>} Processed data with scores, warnings, and metadata
- * @throws {Error} If file not found, missing columns, or processing fails
- * 
- * @example
- * const result = await processData('data.csv', customScale);
- * // Returns: { data: [...], warnings: [...], total_records: 100, columns: [...] }
+ * Internal pipeline: column mapping, cleaning, validation, scoring.
+ * Shared by processData and processDataFromRecords.
+ * @param {Array<object>} df - Array of row objects (keys normalized to lowercase for lookup)
+ * @param {object} csvFormat - config.csv_format_2025
+ * @param {object} scale - Scoring scale
+ * @returns {Promise<object>} { data, warnings, total_records, columns }
+ */
+async function processRecordsPipeline(df, csvFormat, scale) {
+    const columns = csvFormat.columns;
+    const renamedColumns = csvFormat.renamed_columns;
+
+    const expectedColumns = Object.values(columns).map(col => col.trim().toLowerCase());
+    const availableColumns = Object.keys(df[0] || {}).map(col => col.trim().toLowerCase());
+    const columnsToProcess = expectedColumns.filter(col => availableColumns.includes(col));
+
+    if (columnsToProcess.length === 0) {
+        throw new Error("No matching columns found between data and config.");
+    }
+
+    const columnMapping = {};
+    Object.entries(renamedColumns).forEach(([original, renamed]) => {
+        columnMapping[original.trim().toLowerCase()] = renamed;
+    });
+
+    df = df.map(row => {
+        const newRow = {};
+        columnsToProcess.forEach(col => {
+            const renamed = columnMapping[col] || col;
+            newRow[renamed] = row[col] ?? null;
+        });
+        return newRow;
+    });
+
+    const apiKey = process.env.OPENAI_API_KEY;
+    df = await cleanLocationColumn(df, apiKey);
+    df = cleanHoursColumn(df);
+
+    const warnings = [];
+    const validationConfig = csvFormat.validations;
+
+    for (const [field, validation] of Object.entries(validationConfig)) {
+        if (!df[0] || !(field in df[0])) continue;
+        const validValues = validation.valid_values;
+        if (validValues === "any") continue;
+        const validValuesList = Array.isArray(validValues)
+            ? validValues.map(v => String(v).trim().toLowerCase())
+            : [String(validValues).trim().toLowerCase()];
+        const invalidValues = [];
+        for (const row of df) {
+            if (row[field]) {
+                const value = String(row[field]).trim().toLowerCase();
+                if (!validValuesList.includes(value) && !invalidValues.includes(value)) {
+                    invalidValues.push(value);
+                }
+            }
+        }
+        if (invalidValues.length > 0) {
+            warnings.push(`Invalid ${field} values: [${invalidValues.join(', ')}]`);
+        }
+    }
+
+    const records = df.map(record => {
+        const cleanRecord = {};
+        Object.entries(record).forEach(([key, value]) => {
+            cleanRecord[key] = (value === null || value === undefined || value === '') ? null : value;
+        });
+        let score = 0;
+        const scoreBreakdown = {};
+        if (cleanRecord.need_level) {
+            const needLevel = String(cleanRecord.need_level).toLowerCase().replace(/\s+/g, '');
+            const needMapping = { 'veryhighneed': 'very_high_need', 'highneed': 'high_need', 'moderateneed': 'moderate_need', 'lowneed': 'low_need', 'noneed': 'no_need' };
+            const scaleKey = needMapping[needLevel] || needLevel;
+            const needScore = scale.fafsa_scale[scaleKey] || 0;
+            scoreBreakdown.need_level = needScore;
+            score += needScore;
+        }
+        if (cleanRecord.paid_internship) {
+            const paidStatus = String(cleanRecord.paid_internship).toLowerCase();
+            scoreBreakdown.paid_internship = scale.paid[paidStatus] || 0;
+            score += scoreBreakdown.paid_internship;
+        }
+        if (cleanRecord.internship_type) {
+            const internshipType = String(cleanRecord.internship_type).toLowerCase().replace(/-/g, '');
+            const typeMapping = { 'inperson': 'in_person', 'hybrid': 'hybrid', 'virtual': 'virtual' };
+            const typeScore = scale.internship_type[typeMapping[internshipType] || internshipType] || 0;
+            scoreBreakdown.internship_type = typeScore;
+            score += typeScore;
+        }
+        if (cleanRecord.location) {
+            let location = cleanRecord.location;
+            const locationLower = String(location).toLowerCase();
+            if (locationLower.includes('dc') || locationLower.includes('district of columbia') || locationLower === 'd.c.' || locationLower === 'washington dc' || locationLower === 'washington, dc') {
+                location = 'DistrictOfColumbia';
+            }
+            let locationScore = 0;
+            for (const tier of Object.values(scale.cost_of_living)) {
+                if (tier[location]) { locationScore = tier[location]; break; }
+            }
+            if (locationScore === 0 && (locationLower.includes('dc') || locationLower.includes('district'))) {
+                for (const tier of Object.values(scale.cost_of_living)) {
+                    if (tier['DistrictOfColumbia']) { locationScore = tier['DistrictOfColumbia']; break; }
+                }
+            }
+            scoreBreakdown.location = locationScore;
+            score += locationScore;
+        }
+        cleanRecord.score = score;
+        cleanRecord.score_breakdown = scoreBreakdown;
+        if (cleanRecord.month) cleanRecord.month = getMonthKey(cleanRecord.month);
+        return cleanRecord;
+    });
+
+    return {
+        data: records,
+        warnings,
+        total_records: records.length,
+        columns: Object.keys(records[0] || {})
+    };
+}
+
+/**
+ * Process in-memory records (e.g. from GET /api/file). Normalizes row keys to lowercase for config matching.
+ * @param {Array<object>} records - Array of row objects
+ * @param {object|null} scale - Optional scoring scale
+ * @returns {Promise<object>} { data, warnings, total_records, columns }
+ */
+export async function processDataFromRecords(records, scale = null) {
+    const config = loadCsvConfig();
+    const csvFormat = config.csv_format_2025;
+    if (!scale) scale = config.default_scale;
+
+    const df = records.map(row => {
+        const normalized = {};
+        Object.entries(row).forEach(([k, v]) => {
+            normalized[String(k).trim().toLowerCase()] = v;
+        });
+        return normalized;
+    });
+
+    if (!df.length) {
+        throw new Error("Data array is empty.");
+    }
+
+    return processRecordsPipeline(df, csvFormat, scale);
+}
+
+/**
+ * Main data processing function (file or in-memory payload with .data array).
+ * @param {object} data - { data: Array<object> } (in-memory rows)
+ * @param {object|null} scale - Optional scoring scale
+ * @returns {Promise<object>} { data, warnings, total_records, columns }
  */
 export async function processData(data, scale = null) {
     try {
-        // Load CSV configuration (column mappings, validations, default scale)
-        // const config = loadCsvConfig();
-        // const csvFormat = config.csv_format_2025;
-        // const defaultScale = config.default_scale;
-        
-        // Use provided scale or fall back to default from config
-        if (!scale) {
-            scale = defaultScale;
-        }
-        
-        // const columns = csvFormat.columns;
-        // const renamedColumns = csvFormat.renamed_columns;
-        
-        // // Determine uploads directory based on environment
-        // // Vercel uses /tmp (ephemeral), local uses public/uploads
-        // const uploadsDir = process.env.VERCEL 
-        //     ? '/tmp/uploads'
-        //     : path.join(process.cwd(), 'public', 'uploads');
-        
-        // const filePath = path.join(uploadsDir, fileName);
-        
-        // // Verify file exists
-        // if (!fs.existsSync(filePath)) {
-        //     throw new Error("File not found");
-        // }
-        
-        // // Read and parse CSV file
-        // const fileContent = fs.readFileSync(filePath, 'utf-8');
-        const parseResult = Papa.parse(data.data, {
-            header: true,              // First row contains headers
-            skipEmptyLines: true,      // Skip completely empty lines
-            transformHeader: (header) => header.trim().toLowerCase()  // Normalize headers
-        });
-        
-        // Filter out completely empty rows
-        let df = parseResult.data.filter(row => {
-            return Object.values(row).some(val => val && val.trim() !== '');
-        });
-        
-        if (df.length === 0) {
-            throw new Error("CSV file is empty");
-        }
-        
-        // Get expected columns from config (normalized to lowercase)
-        const expectedColumns = Object.values(columns).map(col => col.trim().toLowerCase());
-        
-        // Check which required columns are missing
-        const availableColumns = Object.keys(df[0] || {}).map(col => col.trim().toLowerCase());
-        const missingColumns = expectedColumns.filter(col => !availableColumns.includes(col));
-        
-        if (missingColumns.length > 0) {
-            throw new Error(`CSV file is missing required columns: ${missingColumns.join(', ')}`);
-        }
-        
-        // Create column mapping from original CSV names to standardized field names
-        const columnMapping = {};
-        Object.entries(renamedColumns).forEach(([original, renamed]) => {
-            columnMapping[original.trim().toLowerCase()] = renamed;
-        });
-        
-        // Select only expected columns and rename them to standardized field names
-        df = df.map(row => {
-            const newRow = {};
-            expectedColumns.forEach(col => {
-                const renamed = columnMapping[col] || col;
-                newRow[renamed] = row[col] || null;
-            });
-            return newRow;
-        });
-        
-        // Clean location column using OpenAI (extracts state names)
-        const apiKey = process.env.OPENAI_API_KEY;
-        df = await cleanLocationColumn(df, apiKey);
-        
-        // Clean and standardize hours column
-        df = cleanHoursColumn(df);
-        
-        // Validate data values against configuration rules
-        const warnings = [];
-        const validationConfig = csvFormat.validations;
-        
-        for (const [field, validation] of Object.entries(validationConfig)) {
-            // Skip if field doesn't exist in data
-            if (!df[0] || !(field in df[0])) continue;
-            
-            const validValues = validation.valid_values;
-            // Skip validation if "any" value is allowed
-            if (validValues === "any") continue;
-            
-            // Normalize valid values to lowercase for comparison
-            const validValuesList = Array.isArray(validValues) 
-                ? validValues.map(v => String(v).trim().toLowerCase())
-                : [String(validValues).trim().toLowerCase()];
-            
-            // Collect invalid values (unique list)
-            const invalidValues = [];
-            for (const row of df) {
-                if (row[field]) {
-                    const value = String(row[field]).trim().toLowerCase();
-                    if (!validValuesList.includes(value)) {
-                        if (!invalidValues.includes(value)) {
-                            invalidValues.push(value);
-                        }
-                    }
-                }
-            }
-            
-            // Add warning if invalid values found
-            if (invalidValues.length > 0) {
-                // Format warning to match frontend expectation: "Invalid field_name values: [value1, value2, ...]"
-                warnings.push(`Invalid ${field} values: [${invalidValues.join(', ')}]`);
-            }
-        }
-        
-        // Calculate scores for each record based on the scoring scale
-        const records = df.map(record => {
-            // Clean record: replace null/undefined/empty with null for JSON serialization
-            const cleanRecord = {};
-            Object.entries(record).forEach(([key, value]) => {
-                cleanRecord[key] = (value === null || value === undefined || value === '') ? null : value;
-            });
-            
-            let score = 0;
-            const scoreBreakdown = {};
-            
-            // FAFSA Need Level scoring (0-5 points)
-            if (cleanRecord.need_level) {
-                const needLevel = String(cleanRecord.need_level).toLowerCase().replace(/\s+/g, '');
-                // Map CSV values to scale keys (e.g., "veryhighneed" -> "very_high_need")
-                const needMapping = {
-                    'veryhighneed': 'very_high_need',
-                    'highneed': 'high_need',
-                    'moderateneed': 'moderate_need',
-                    'lowneed': 'low_need',
-                    'noneed': 'no_need'
-                };
-                const scaleKey = needMapping[needLevel] || needLevel;
-                const needScore = scale.fafsa_scale[scaleKey] || 0;
-                scoreBreakdown.need_level = needScore;
-                score += needScore;
-            }
-            
-            // Paid/Unpaid Internship scoring (4-5 points)
-            if (cleanRecord.paid_internship) {
-                const paidStatus = String(cleanRecord.paid_internship).toLowerCase();
-                const paidScore = scale.paid[paidStatus] || 0;
-                scoreBreakdown.paid_internship = paidScore;
-                score += paidScore;
-            }
-            
-            // Internship Type scoring (0-5 points: in-person=5, hybrid=4, virtual=0)
-            if (cleanRecord.internship_type) {
-                const internshipType = String(cleanRecord.internship_type).toLowerCase().replace(/-/g, '');
-                // Map CSV values to scale keys (e.g., "inperson" -> "in_person")
-                const typeMapping = {
-                    'inperson': 'in_person',
-                    'hybrid': 'hybrid',
-                    'virtual': 'virtual'
-                };
-                const scaleKey = typeMapping[internshipType] || internshipType;
-                const typeScore = scale.internship_type[scaleKey] || 0;
-                scoreBreakdown.internship_type = typeScore;
-                score += typeScore;
-            }
-            
-            // Location/Cost of Living scoring (1-5 points based on state tier)
-            if (cleanRecord.location) {
-                let locationScore = 0;
-                let location = cleanRecord.location;
-                const costOfLiving = scale.cost_of_living;
-                
-                // Normalize location for lookup (handle District of Columbia variations)
-                const locationLower = String(location).toLowerCase();
-                if (locationLower.includes('dc') || 
-                    locationLower.includes('district of columbia') || 
-                    locationLower === 'd.c.' ||
-                    locationLower === 'washington dc' ||
-                    locationLower === 'washington, dc') {
-                    location = 'DistrictOfColumbia';
-                }
-                
-                // Look up location in cost of living tiers (tier1, tier2, tier3)
-                for (const tier of Object.values(costOfLiving)) {
-                    if (tier[location]) {
-                        locationScore = tier[location];
-                        break;
-                    }
-                }
-                
-                // If still no score found and location contains DC-related terms, try DistrictOfColumbia explicitly
-                if (locationScore === 0 && (locationLower.includes('dc') || locationLower.includes('district'))) {
-                    for (const tier of Object.values(costOfLiving)) {
-                        if (tier['DistrictOfColumbia']) {
-                            locationScore = tier['DistrictOfColumbia'];
-                            break;
-                        }
-                    }
-                }
-                
-                scoreBreakdown.location = locationScore;
-                score += locationScore;
-            }
-            
-            // Add calculated score and breakdown to record
-            cleanRecord.score = score;
-            cleanRecord.score_breakdown = scoreBreakdown;
+        const config = loadCsvConfig();
+        const csvFormat = config.csv_format_2025;
+        if (!scale) scale = config.default_scale;
 
-            if (cleanRecord.month) {
-                cleanRecord.month = getMonthKey(cleanRecord.month)
-            }
-            
-            return cleanRecord;
+        let df = data?.data;
+        if (!df || !Array.isArray(df) || df.length === 0) {
+            throw new Error("Data must be an object with a non-empty 'data' array.");
+        }
+        df = df.map(row => {
+            const normalized = {};
+            Object.entries(row).forEach(([k, v]) => {
+                normalized[String(k).trim().toLowerCase()] = v;
+            });
+            return normalized;
         });
-        
-        // Return processed data with metadata
-        return {
-            data: records,                    // Array of scored records
-            warnings: warnings,              // Validation warnings
-            total_records: records.length,   // Total number of records
-            columns: Object.keys(records[0] || {})  // Column names
-        };
-        
+
+        return await processRecordsPipeline(df, csvFormat, scale);
     } catch (error) {
         console.error('Error in processData:', error);
         throw error;

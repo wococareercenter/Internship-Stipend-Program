@@ -1,8 +1,6 @@
 "use client";
 import { useState } from "react";
 import Scale from "./components/Scale";
-import Upload from "./components/Upload";
-import File from "./components/File";
 import Result from "./components/Result";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Toaster } from "@/components/ui/sonner";
@@ -32,10 +30,6 @@ export default function Home() {
               </DialogContent>
             </Dialog>
           </div>
-          <Upload />
-          {/* <div className="w-full h-15">
-            <File />
-          </div> */}
         </div>
       </div>
       <hr className="my-4 border-1 border-gray-300" />

@@ -395,7 +395,13 @@ async function processRecordsPipeline(df, csvFormat, scale) {
         }
         cleanRecord.score = score;
         cleanRecord.score_breakdown = scoreBreakdown;
-        if (cleanRecord.month) cleanRecord.month = getMonthKey(cleanRecord.month);
+        if (cleanRecord.month) {
+            cleanRecord.month = getMonthKey(cleanRecord.month);
+        } else if (cleanRecord.start_date || cleanRecord.end_date) {
+            cleanRecord.month = getMonthKey(cleanRecord.start_date || cleanRecord.end_date);
+        } else {
+            cleanRecord.month = 'Unknown';
+        }
         return cleanRecord;
     });
 

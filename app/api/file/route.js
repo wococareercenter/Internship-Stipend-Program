@@ -130,7 +130,7 @@ export async function OPTIONS() {
 
 export async function GET(request) {
     try {
-        const res = await fetch("https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLjCsgT23dDea2Kwi6dhqG8ty3ea9M83O9-HI6r-nWpgDHRLi6M0QU1ZDhRo20c3JNNQZ99oxnyCthHKYLMuJQOZBQ1s2BFNC9ShCUThDIMKvmcVxQ8Pgug55sm9k1lZLOxbaBMAakUXHZyyZdkuxfBZ-BPWBWd4mNbIkuO-KawIFQE1YC0EF7dX7J3BjZAEW9IokvVeGwWulUDc-XeUM_IE4H8c-3C-Ve0qgf-HAhvm74fa4-pRtRNKL2dA6KP_N07LFc_8ltarLlNDc_iwujGTEmNkVsNTW_V3pTpf&lib=MeZN7iawh1qkufiHTNx9eFUUkj10Wrk_b");
+        const res = await fetch("https://script.google.com/macros/s/AKfycbwRrZl-p1kmHB5jXwoZHnjvN3xZEmLpCjd-JhrQ8Oiq8CJU-Zn4cgYHgktKxz_xg9aE/exec");
         const data = await res.json();
 
         // Return file metadata and content

@@ -130,7 +130,8 @@ export async function OPTIONS() {
 
 export async function GET(request) {
     try {
-        const res = await fetch("https://script.google.com/macros/s/AKfycbwRrZl-p1kmHB5jXwoZHnjvN3xZEmLpCjd-JhrQ8Oiq8CJU-Zn4cgYHgktKxz_xg9aE/exec");
+        const res = await fetch("https://script.google.com/macros/s/AKfycbzRXCFAF1rYa75Ppd4GF41d7W8Dnzn-XpnIfblPs5TVc3rW0RzXVgw1zFvQqSJtiqes/exec"); // 2025
+        // const res = await fetch("https://script.google.com/macros/s/AKfycbyTayCkkeZnhnlCV0kKo1BhCSjGtZ-UWdXA3G_DJeEHfPJX1U06T7aFaFAYT1037sU0Iw/exec"); // 2024
         const data = await res.json();
 
         // Return file metadata and content

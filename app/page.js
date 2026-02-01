@@ -18,12 +18,12 @@ export default function Home() {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <button className="hover:cursor-pointer" type="button">
-                  <div className="flex flex-row items-center gap-2 justify-center">
+                  <div className="flex flex-row items-center gap-1 justify-center">
                     <h2 className="text-xl font-bold">Set Your Scale</h2>
                   </div>
                 </button>
               </DialogTrigger>
-              <DialogContent className="!max-w-[80vw] !max-h-[90vh] overflow-y-auto">
+              <DialogContent className="!max-w-[80vw] !max-h-[95vh]">
                 <DialogTitle className="text-xl font-bold">Set Your Scale</DialogTitle>
                 <DialogDescription className="text-sm">You can adjust the points for FAFSA, paid/unpaid, internship type. You can also drag and drop states between cost of living tiers to organize them.</DialogDescription>
                 <Scale onSave={() => setIsDialogOpen(false)} />

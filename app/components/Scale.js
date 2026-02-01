@@ -68,7 +68,7 @@ function DroppableTier({ tierNumber, tierTitle, states }) {
 
 export default function Scale( { onSave }) {
     // All hooks must be called at the top level, before any conditional returns
-    const { updateScale } = useScale();
+    const { scale, resetScale, defaultScale, updateScale } = useScale();
 
     const [isMounted, setIsMounted] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
@@ -82,106 +82,20 @@ export default function Scale( { onSave }) {
     }
 
     // Input Scale variable and default value
-    const [fafsaScale, setFafsaScale] = useState({
-        very_high_need: 5,
-        high_need: 4,
-        moderate_need: 3,
-        low_need: 2,
-        no_need: 0,
-    });
-
-    // Input Paid or Unpaid variable and default value
-    const [paid, setPaid] = useState({
-        paid: 4,
-        unpaid: 5,
-    });
-
-    // Input In-Person or Remote variable and default value
-    const [internshipType, setInternshipType] = useState({
-        in_person: 5,
-        hybrid: 4,
-        virtual: 0,
-    });
-
-    // Input Cost of Living variable and default value
-    const defaultCostOfLiving = {
-        tier1: {
-            Mississippi: 1, 
-            Arkansas: 1,
-            Missouri: 1,
-            Michigan: 1,
-            Tennessee: 1,
-            Ohio: 1,
-            Oklahoma: 1,
-            Georgia: 1,
-            Alabama: 1,
-            Indiana: 1,
-            WestVirginia: 1,
-            Texas: 1,
-            Kansas: 1,
-            Iowa: 1,
-        },
-        tier2: {
-            NorthCarolina: 3,
-            Illinois: 3,
-            Wisconsin: 3,
-            Nebraska: 3,
-            Idaho: 3,
-            SouthDakota: 3,
-            NewMexico: 3,
-            Florida: 3,
-            Pennsylvania: 3,
-            Minnesota: 3,
-            Virginia: 3,
-            Utah: 3,
-            Wyoming: 3,
-            NorthDakota: 3,
-            SouthCarolina: 3,
-            International: 3,
-            Louisiana: 3,
-            Kentucky: 3,
-            Nevada: 3,
-        },
-        tier3: {
-            Montana: 5, 
-            Colorado: 5,
-            NewYork: 5,
-            Washington: 5,
-            Maine: 5,
-            Oregon: 5,
-            Vermont: 5,
-            NewJersey: 5,
-            NewHampshire: 5,
-            Maryland: 5,
-            RhodeIsland: 5,
-            Connecticut: 5,
-            Massachusetts: 5,
-            Hawaii: 5,
-            California: 5,
-            Alaska: 5,
-            DistrictOfColumbia: 5,
-            Delaware: 5,
-            Arizona: 5,
-        },
-    };
+    const [fafsaScale, setFafsaScale] = useState(defaultScale.fafsa_scale);
+    const [paid, setPaid] = useState(defaultScale.paid);
+    const [internshipType, setInternshipType] = useState(defaultScale.internship_type);
+    const [costOfLiving, setCostOfLiving] = useState(defaultScale.cost_of_living);
 
     // Tier point values (editable)
     const [tierPoints, setTierPoints] = useState(() => {
         if (typeof window !== 'undefined') {
             const saved = sessionStorage.getItem('tierPoints');
-            return saved ? JSON.parse(saved) : { tier1: 1, tier2: 3, tier3: 5 };
+            return saved ? JSON.parse(saved) : { tier1: 1, tier2: 2, tier3: 3 };
         }
-        return { tier1: 1, tier2: 3, tier3: 5 };
+        return { tier1: 1, tier2: 2, tier3: 3 };
     });
 
-    // Load from session storage or use default
-    const [costOfLiving, setCostOfLiving] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const saved = sessionStorage.getItem('costOfLiving');
-            return saved ? JSON.parse(saved) : defaultCostOfLiving;
-        }
-        return defaultCostOfLiving;
-    });
 
     useEffect(() => {
         setIsMounted(true);
@@ -317,24 +231,8 @@ export default function Scale( { onSave }) {
 
     // Function to reset all scales to default values
     const handleReset = async () => {
-        setFafsaScale({
-            very_high_need: 5,
-            high_need: 4,
-            moderate_need: 3,
-            low_need: 2,
-            no_need: 0,
-        });
-        setPaid({
-            paid: 4,
-            unpaid: 5,
-        });
-        setInternshipType({
-            in_person: 5,
-            hybrid: 4,
-            virtual: 0,
-        });
-        setCostOfLiving(defaultCostOfLiving);
-        setTierPoints({ tier1: 1, tier2: 3, tier3: 5 });
+        resetScale();
+        setTierPoints({ tier1: 1, tier2: 2, tier3: 3 });
         
         // Clear session storage
         if (typeof window !== 'undefined') {
@@ -601,7 +499,7 @@ export default function Scale( { onSave }) {
                         <hr className="border-1 border-black w-full" />
                         
                         {/* Tier Point Inputs */}
-                        <div className="flex flex-row gap-4 w-full justify-center">
+                        {/* <div className="flex flex-row gap-4 w-full justify-center">
                             <div className="flex flex-row items-center gap-2">
                                 <label htmlFor="tier1Points" className="text-sm font-semibold">Tier 1 Points:</label>
                                 <input 
@@ -647,7 +545,7 @@ export default function Scale( { onSave }) {
                                     })} 
                                 />
                             </div>
-                        </div>
+                        </div> */}
 
                         <DndContext 
                             sensors={sensors}
@@ -675,7 +573,7 @@ export default function Scale( { onSave }) {
                     </div>
                 </div>
                 
-                <div className="flex gap-2 justify-center">
+                <div className="flex gap-2 justify-center mb-4">
                     <button className="bg-green-600 text-white hover:bg-green-700 rounded-md p-2" type="submit" onClick={handleSubmit}>Save</button>
                     <button className="bg-red-600 text-white hover:bg-red-700 rounded-md p-2" type="button" onClick={handleReset}>Reset to Default</button>
                 </div>

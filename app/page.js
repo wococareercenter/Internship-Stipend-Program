@@ -38,7 +38,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="row-start-3 flex flex-wrap items-center justify-center text-sm">
-       Updated November 12, 2025
+       Updated February 1, 2026
       </footer>
       <Toaster 
         position="bottom-right"

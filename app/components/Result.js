@@ -56,7 +56,7 @@ export default function Result( { year } ) {
     useEffect(() => {
         setIsMounted(true);
         fetchExtractedData();
-    }, []);
+    }, [year]);
 
 
     useEffect(() => {
@@ -303,7 +303,7 @@ export default function Result( { year } ) {
                                             </div>
                                         </div>
                                     </div>
-                                );
+                                )
                             })}
                         </div>
                         
@@ -323,7 +323,7 @@ export default function Result( { year } ) {
                             </div>
                         )}
                     </div>
-                )};
+                )}
                 
                 {!isLoading && !error && !extractedData && (
                     <div className="text-center text-gray-500">

@@ -138,7 +138,7 @@ export async function GET(request) {
             ); // 2025
         } else if (year === 2026) {
             res = await fetch(
-                `https://script.google.com/macros/s/AKfycbyqUwy5d_eS9PnluF3vgkd1Mj7OzIpYFuFPovMJS3z-mmP5zPnCvMHolPHkeg9BW_4pRg/exec?year=${year}`
+                `https://script.google.com/macros/s/AKfycbzBTfuSqWU6wyrCxRImnR6y7ghyUU6Fy-0PsRZg9wrfqfT9N6iItTu82-U3apHhdKc2Xw/exec?year=${year}`
             ); // 2026
         }
         

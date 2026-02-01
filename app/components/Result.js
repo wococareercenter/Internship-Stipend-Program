@@ -200,7 +200,7 @@ export default function Result( { year } ) {
                                 </div>
                             ))}
                         </div>
-                        <div className="flex flex-wrap gap-4 overflow-y-auto max-h-[calc(100vh/1.5)] rounded-md p-2 bg-zinc-100">
+                        <div className="flex flex-wrap gap-4 overflow-y-auto max-h-[calc(100vh/1.5)] w-full rounded-md p-2 bg-zinc-100">
                             {selectedMonth && groupedByMonth[selectedMonth]?.map((item, index) => {
                                 // Check for invalid elements using warnings from backend
                                 const getInvalidFields = () => {

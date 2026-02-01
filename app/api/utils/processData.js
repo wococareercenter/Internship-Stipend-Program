@@ -311,6 +311,14 @@ async function processRecordsPipeline(df, csvFormat, scale) {
         columnMapping[original.trim().toLowerCase()] = renamed;
     });
 
+    df = df.filter(row => 
+        Object.values(row).some(value =>
+            value !== null && 
+            value !== undefined &&
+            String(value).trim() !== ""
+        )
+    );
+
     df = df.map(row => {
         const newRow = {};
         columnsToProcess.forEach(col => {

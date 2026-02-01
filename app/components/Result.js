@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useScale } from "../context/ScaleContext";
 
-export default function Result() {
+export default function Result( { year } ) {
     const { scale } = useScale();
     const [isMounted, setIsMounted] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -41,7 +41,7 @@ export default function Result() {
         try {
             await new Promise(resolve => setTimeout(resolve, 1000));
 
-            const fileResponse = await fetch(`${baseUrl}/api/file`);
+            const fileResponse = await fetch(`${baseUrl}/api/file?year=${year}`);
             const fileData = await fileResponse.json();
 
             if (!fileData.content) {
@@ -124,9 +124,9 @@ export default function Result() {
                 </div>
                 <button 
                     onClick={handleRefresh}
-                    className="px-3 py-1 bg-green-100 rounded hover:bg-green-200 text-sm hover:cursor-pointer"
+                    className="px-3 py-1 bg-green-100 rounded hover:bg-green-200 hover:cursor-pointer"
                 >
-                    Refresh for a different scale
+                    <h2 className="text-xl font-bold text-center">Refresh Data</h2>
                 </button>
             </div>
             
@@ -181,7 +181,7 @@ export default function Result() {
                                     <h3 className="text-xl font-bold mb-4 sticky top-0 bg-white py-2 z-10 border-b-2 text-left">
                                         {month} ({groupedByMonth[month].length} students)
                                     </h3>
-                                    <div className="flex flex-wrap gap-4 overflow-y-auto max-h-[calc(100vh/1.5)] rounded-md p-2">
+                                    <div className="flex flex-wrap gap-4 overflow-y-auto max-h-[calc(100vh/1.5)] rounded-md p-2 bg-zinc-100">
                                         {groupedByMonth[month].map((item, index) => {
                                             // Check for invalid elements using warnings from backend
                                             const getInvalidFields = () => {

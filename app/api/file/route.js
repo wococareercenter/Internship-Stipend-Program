@@ -129,9 +129,19 @@ export async function OPTIONS() {
 
 
 export async function GET(request) {
+    const year = Number(request.nextUrl.searchParams.get('year'));
     try {
-        // const res = await fetch("https://script.google.com/macros/s/AKfycbzRXCFAF1rYa75Ppd4GF41d7W8Dnzn-XpnIfblPs5TVc3rW0RzXVgw1zFvQqSJtiqes/exec"); // 2025
-        const res = await fetch("https://script.google.com/macros/s/AKfycbyqUwy5d_eS9PnluF3vgkd1Mj7OzIpYFuFPovMJS3z-mmP5zPnCvMHolPHkeg9BW_4pRg/exec"); // 2026
+        let res = null;
+        if (year === 2025) {
+            res = await fetch(
+                `https://script.google.com/macros/s/AKfycbzU-8TEzYCMwU5TcXMmC-UJNbbGvZppFzoUoqQ9NjcWJhMhpnczeOjedCRYe4tvHvCVEA/exec?year=${year}`
+            ); // 2025
+        } else if (year === 2026) {
+            res = await fetch(
+                `https://script.google.com/macros/s/AKfycbyqUwy5d_eS9PnluF3vgkd1Mj7OzIpYFuFPovMJS3z-mmP5zPnCvMHolPHkeg9BW_4pRg/exec?year=${year}`
+            ); // 2026
+        }
+        
         const data = await res.json();
 
         // Return file metadata and content

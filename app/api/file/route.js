@@ -33,72 +33,26 @@ export async function OPTIONS() {
     });
 }
 
-/**
- * Get current uploaded file information
- * Returns file metadata and content if available
- */
+
 export async function GET(request) {
+    const year = Number(request.nextUrl.searchParams.get('year'));
     try {
-        // Determine uploads directory based on environment
-        // Vercel uses /tmp (ephemeral), local uses public/uploads
-        const uploadsDir = process.env.VERCEL 
-            ? '/tmp/uploads'
-            : path.join(process.cwd(), 'public', 'uploads');
-        
-        // Return null if uploads directory doesn't exist
-        if (!fs.existsSync(uploadsDir)) {
-            return NextResponse.json({ 
-                file: null, 
-                content: null 
-            }, {
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                    'Access-Control-Allow-Headers': 'Content-Type',
-                }
-            });
+        let res = null;
+        if (year === 2025) {
+            res = await fetch(
+                `https://script.google.com/macros/s/AKfycbzU-8TEzYCMwU5TcXMmC-UJNbbGvZppFzoUoqQ9NjcWJhMhpnczeOjedCRYe4tvHvCVEA/exec?year=${year}`
+            ); // 2025
+        } else if (year === 2026) {
+            res = await fetch(
+                `https://script.google.com/macros/s/AKfycbzBTfuSqWU6wyrCxRImnR6y7ghyUU6Fy-0PsRZg9wrfqfT9N6iItTu82-U3apHhdKc2Xw/exec?year=${year}`
+            ); // 2026
         }
         
-        // Check if there's a file in uploads directory
-        const files = await fs.promises.readdir(uploadsDir);
-        for (const filename of files) {
-            const filePath = path.join(uploadsDir, filename);
-            const stat = await fs.promises.stat(filePath);
-            
-            if (stat.isFile()) {
-                // Get file content if it's a CSV (for preview purposes)
-                let content = null;
-                const fileExtension = path.extname(filename).toLowerCase();
-                if (fileExtension === '.csv') {
-                    try {
-                        content = await fs.promises.readFile(filePath, 'utf-8');
-                    } catch (err) {
-                        console.error(`Error reading file content: ${err}`);
-                    }
-                }
-                
-                // Return file metadata and content
-                return NextResponse.json({
-                    file: {
-                        name: filename,
-                        size: stat.size,
-                        uploadDate: new Date(stat.mtime).toISOString()
-                    },
-                    content: content
-                }, {
-                    headers: {
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                        'Access-Control-Allow-Headers': 'Content-Type',
-                    }
-                });
-            }
-        }
-        
-        // No file found in uploads directory
-        return NextResponse.json({ 
-            file: null, 
-            content: null 
+        const data = await res.json();
+
+        // Return file metadata and content
+        return NextResponse.json({
+            content: data
         }, {
             headers: {
                 'Access-Control-Allow-Origin': '*',
@@ -106,24 +60,17 @@ export async function GET(request) {
                 'Access-Control-Allow-Headers': 'Content-Type',
             }
         });
-
     } catch (error) {
-        // Log error for debugging
-        console.error('File fetch error:', error);
-        console.error('Error stack:', error.stack);
-        
-        // Return error response
         return NextResponse.json({ 
-            error: "Failed to fetch file",
+            error: "Failed to fetch data", 
             details: error.message 
-        }, { 
-            status: 500,
+        }, {
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'GET, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type',
-            }
+            },
+            status: 500
         });
     }
 }
-

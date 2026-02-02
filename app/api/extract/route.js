@@ -1,21 +1,20 @@
 /**
  * Data Extraction API Route
- * 
- * This endpoint processes uploaded CSV files by:
- * 1. Reading and parsing the CSV file
- * 2. Validating required columns
- * 3. Cleaning location data using OpenAI
- * 4. Standardizing hours data
- * 5. Calculating scores based on the provided scale
- * 
+ *
+ * Processes in-memory data (e.g. from GET /api/file):
+ * 1. Validates required columns (only those present in data)
+ * 2. Cleaning location data using OpenAI
+ * 3. Standardizing hours data
+ * 4. Calculating scores based on the provided scale
+ *
  * @route POST /api/extract
- * @body {string} file_name - Name of the uploaded CSV file
- * @body {object} scale - Scoring scale configuration (optional, uses default if not provided)
+ * @body {object|Array} data - Array of row objects, or { data: array }
+ * @body {object} scale - Scoring scale configuration (optional)
  * @returns {object} Processed data with scores, warnings, and metadata
  */
 
 import { NextResponse } from 'next/server';
-import { processData } from '../utils/processData';
+import { processDataFromRecords } from '../utils/processData';
 
 // Export route config to ensure it's publicly accessible
 export const runtime = 'nodejs';
@@ -42,15 +41,13 @@ export async function OPTIONS() {
  */
 export async function POST(request) {
     try {
-        // Parse request body
         const body = await request.json();
-        const { file_name, scale } = body;
-        
-        // Validate required parameters
-        if (!file_name) {
-            return NextResponse.json({ 
-                error: "File name is required" 
-            }, { 
+        const { data: rawData, scale } = body;
+
+        if (rawData === undefined || rawData === null) {
+            return NextResponse.json({
+                error: "Data is required"
+            }, {
                 status: 400,
                 headers: {
                     'Access-Control-Allow-Origin': '*',
@@ -59,10 +56,22 @@ export async function POST(request) {
                 }
             });
         }
-        
-        // Process the CSV file: parse, validate, clean, and score
-        // This function handles the entire data processing pipeline
-        const result = await processData(file_name, scale);
+
+        const records = Array.isArray(rawData) ? rawData : (rawData?.data && Array.isArray(rawData.data) ? rawData.data : null);
+        if (!records || !Array.isArray(records)) {
+            return NextResponse.json({
+                error: "Data must be an array of row objects or an object with a 'data' array"
+            }, {
+                status: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                }
+            });
+        }
+
+        const result = await processDataFromRecords(records, scale);
         
         // Return processed data with scores and warnings
         return NextResponse.json(result, {

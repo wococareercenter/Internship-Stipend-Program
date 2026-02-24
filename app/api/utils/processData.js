@@ -389,6 +389,9 @@ async function processRecordsPipeline(df, csvFormat, scale) {
             if (locationLower.includes('dc') || locationLower.includes('district of columbia') || locationLower === 'd.c.' || locationLower === 'washington dc' || locationLower === 'washington, dc') {
                 location = 'DistrictOfColumbia';
             }
+            if (locationLower.includes('south ca')) {
+                location = 'SouthCarolina'
+            }
             let locationScore = 0;
             for (const tier of Object.values(scale.cost_of_living)) {
                 if (tier[location]) { locationScore = tier[location]; break; }

@@ -13,7 +13,8 @@
             "end_date": "What is the end date of your internship?",
             "internship_type": "Is your internship in-person, virtual, or hybrid?",
             "hours": "How many hours will you be interning each week?",
-            "need_level": "Need Level"
+            "need_level": "Need Level",
+            "need_level_fafsa": "FAFSA"
         },
         "renamed_columns": {
             "Timestamp": "month",
@@ -27,7 +28,8 @@
             "What is the end date of your internship?": "end_date",
             "Is your internship in-person, virtual, or hybrid?": "internship_type",
             "How many hours will you be interning each week?": "hours",
-            "Need Level": "need_level"
+            "Need Level": "need_level",
+            "FAFSA": "need_level"
         },
         "validations": {
             "school_year": {

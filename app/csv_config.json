@@ -72,7 +72,7 @@
             "high_need": 12,
             "moderate_need": 9,
             "low_need": 5,
-            "no_need": 2
+            "no_need": 0
         },
         "paid": {
             "paid": 4,
